@@ -5,20 +5,21 @@ import argparse,os
 Platform Learning
 
 '''
-Encoding_rewrite='0'
-#Performance_gen='1'
-Encoding_candidate_gen='2'
-Feature_extraction='3'
-Feature_selection='4'
-Model_building='5'
-Schedule_building='6'
-Interleaving_building='7'
-Evaluation='8'
+Encoding_rewrite='1'
+#Performance_gen='2'
+Encoding_candidate_gen='3'
+Feature_extraction='4'
+Feature_selection='5'
+Model_building='6'
+Schedule_building='7'
+Interleaving_building='8'
+Evaluation='9'
 
 '''
 Platform Prediction
+use solve.py
 '''
-Test='9'
+
 
 
 
