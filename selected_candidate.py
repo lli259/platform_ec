@@ -108,7 +108,7 @@ if __name__ == "__main__":
         else:
             score_dict[name]+=winsore
 
-    #print(win_tuple,score_dict)
+    print(win_tuple,score_dict)
 
 
 
@@ -138,7 +138,7 @@ if __name__ == "__main__":
         else:
             score_dict[name]+=winsore
 
-    #print(solving_tuple,score_dict)
+    print(solving_tuple,score_dict)
 
     avg_rt_tuple=sorted(avg_rt_tuple)
 
@@ -155,7 +155,7 @@ if __name__ == "__main__":
         else:
             score_dict[name]+=winsore
 
-    #print(avg_rt_tuple,score_dict)
+    print(avg_rt_tuple,score_dict)
 
     rank_tuple=[]
     for k in score_dict.keys():
