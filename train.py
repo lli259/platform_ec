@@ -6,7 +6,7 @@ Platform Learning
 
 '''
 Encoding_rewrite='1'
-#Performance_gen='2'
+Performance_gen='2'
 Encoding_candidate_gen='3'
 Feature_extraction='4'
 Feature_selection='5'
@@ -48,8 +48,16 @@ args = parser.parse_args()
 
 if args.p== [] or Encoding_rewrite in args.p:
     for enc_file in os.listdir(args.encodings[0]):
-        if not enc_file ==  None:
+        if (not enc_file ==  None) and (not '_rewritten.lp' in enc_file):
             os.system('python aaggrewrite.py '+args.encodings[0]+'/'+enc_file)
+
+
+if args.p== [] or Performance_gen in args.p:
+    os.system('python performance_gen.py '
+    +' --encodings ' +args.encodings[0]
+    +' --instances ' +args.instances[0]
+    +' --cutoff ' + args.cutoff[0]
+    +' --performance_data ' + args.performance_data[0])
 
 
 if args.p== [] or Encoding_candidate_gen in args.p:
