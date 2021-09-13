@@ -21,9 +21,10 @@ def get_most_meaningful(feature_data,performance_data):
     cols=alldata.columns.values
     X_Train=alldata.loc[:,cols[:-1]]
     Y_Train=alldata.loc[:,cols[-1:]]
-    
+    #print(X_Train.shape,Y_Train.shape)
     #X_Train = StandardScaler().fit_transform(X_Train)
     #print(X_Train,Y_Train)
+    Y_Train=Y_Train.values.reshape(X_Train.shape[0],)
     trainedforest = RandomForestRegressor(n_estimators=200,max_depth=20).fit(X_Train,Y_Train)
 
     feat_importances = pd.Series(trainedforest.feature_importances_, index= X_Train.columns)
@@ -36,8 +37,8 @@ def get_accuracy(most_meaning_f,feature_data,performance_data):
     cols=alldata.columns.values
     X_Train=alldata.loc[:,most_meaning_f]
     Y_Train=alldata.loc[:,cols[-1:]]
-
-    X_Train = StandardScaler().fit_transform(X_Train)
+    #X_Train = StandardScaler().fit_transform(X_Train)
+    Y_Train=Y_Train.values.reshape(X_Train.shape[0],)
     trainedforest = RandomForestRegressor(n_estimators=200,max_depth=20).fit(X_Train,Y_Train)
     predictionforest = trainedforest.predict(X_Train)
     
