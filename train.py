@@ -6,7 +6,7 @@ Platform Learning
 
 '''
 Encoding_rewrite='1'
-Performance_gen='2'
+#Performance_gen='2'
 Encoding_candidate_gen='3'
 Feature_extraction='4'
 Feature_selection='5'
@@ -26,11 +26,12 @@ use solve.py
 def define_args(arg_parser):
     arg_parser.description = 'ASP Platform'
 
-    arg_parser.add_argument('-p', nargs='*', default=[], help='Gringo input files')
-    arg_parser.add_argument('--encodings', nargs='*', default=['encodings'], help='Gringo input files')
-    arg_parser.add_argument('--selected_encodings', nargs='*', default=['encodings_selected'], help='Gringo input files')
+    arg_parser.add_argument('-p', nargs='*', default=[], help='Platform process number')
+    arg_parser.add_argument('--encodings', nargs='*', default=['encodings'], help='Platform input encodings')
+    arg_parser.add_argument('--selected_encodings', nargs='*', default=['encodings_selected'], help='Platform selected encodings')
     arg_parser.add_argument('--instances', nargs='*', default=['instances'], help='Gringo input files')
     arg_parser.add_argument('--cutoff', nargs='*', default=['200'], help='Gringo input files')
+    arg_parser.add_argument('--rewrite_form', nargs='*', default=['0'], help='Gringo input files')
     arg_parser.add_argument('--performance_data', nargs='*', default=['performance'], help='Gringo input files')
     arg_parser.add_argument('--performance_select', nargs='*', default=['performance_selected'], help='Gringo input files')   
     arg_parser.add_argument('--num_candidate', nargs='*', default=['4'], help='Gringo input files')
@@ -44,22 +45,25 @@ parser = argparse.ArgumentParser()
 define_args(parser)
 args = parser.parse_args()
 
-#rewrite
+#Encoding rewrite
 
 if args.p== [] or Encoding_rewrite in args.p:
     for enc_file in os.listdir(args.encodings[0]):
         if (not enc_file ==  None) and (not '_rewritten.lp' in enc_file):
             os.system('python aaggrewrite.py '+args.encodings[0]+'/'+enc_file)
 
-
+'''
+#performance data generation
 if args.p== [] or Performance_gen in args.p:
     os.system('python performance_gen.py '
     +' --encodings ' +args.encodings[0]
     +' --instances ' +args.instances[0]
     +' --cutoff ' + args.cutoff[0]
     +' --performance_data ' + args.performance_data[0])
+'''
 
 
+#Encoding_candidate generation
 if args.p== [] or Encoding_candidate_gen in args.p:
 
     allcandidate=len(os.listdir(args.encodings[0]))
@@ -70,7 +74,7 @@ if args.p== [] or Encoding_candidate_gen in args.p:
     +' --cutoff ' + args.cutoff[0]
     +' --performance_data ' + args.performance_data[0])
 
-
+#Feature extraction
 if args.p== [] or Feature_extraction in args.p:
     instances_folder=args.selected_encodings[0]
     encodings_folder=args.encodings[0]
@@ -78,6 +82,7 @@ if args.p== [] or Feature_extraction in args.p:
     +' --encodings_folder ' + encodings_folder
     )
 
+#Feature selection
 if args.p== [] or Feature_selection in args.p:
     feature_folder=args.feature_data[0]
     performance_folder=args.performance_select[0]
@@ -86,7 +91,7 @@ if args.p== [] or Feature_selection in args.p:
     +' --performance_folder ' + performance_folder
     )
 
-
+#Machine Learning Model building
 if args.p== [] or Model_building in args.p:
     feature_folder=args.feature_selected[0]
     performance_folder=args.performance_select[0]
@@ -98,7 +103,7 @@ if args.p== [] or Model_building in args.p:
     +' --cutoff ' + cutoff
     )
 
-
+#Schedule building
 if args.p== [] or Schedule_building in args.p:
 
     performance_folder=args.performance_select[0]
@@ -110,6 +115,7 @@ if args.p== [] or Schedule_building in args.p:
     +' --cutoff ' + cutoff
     )
 
+#Interleaving Schedule building
 if args.p== [] or Interleaving_building in args.p:
 
     performance_folder=args.performance_select[0]
@@ -120,3 +126,5 @@ if args.p== [] or Interleaving_building in args.p:
     +' --performance_folder ' + performance_folder
     +' --cutoff ' + cutoff
     )
+
+
