@@ -100,7 +100,7 @@ if args.p== [] or Model_building in args.p:
     feature_folder=args.feature_selected[0]
     performance_folder=args.performance_select[0]
     #cutoff=args.cutoff[0]
-    cutoff='100'
+    cutoff='140'
 
     os.system('python model_building.py --feature_folder '+ feature_folder 
     +' --performance_folder ' + performance_folder
@@ -111,8 +111,8 @@ if args.p== [] or Model_building in args.p:
 if args.p== [] or Schedule_building in args.p:
 
     performance_folder=args.performance_select[0]
-    cutoff=args.cutoff[0]
-
+    #cutoff=args.cutoff[0]
+    cutoff='140'
 
     os.system('python schedule_build.py '
     +' --performance_folder ' + performance_folder
@@ -123,8 +123,8 @@ if args.p== [] or Schedule_building in args.p:
 if args.p== [] or Interleaving_building in args.p:
 
     performance_folder=args.performance_select[0]
-    cutoff=args.cutoff[0]
-
+    #cutoff=args.cutoff[0]
+    cutoff='140'
 
     os.system('python interleave_build.py '
     +' --performance_folder ' + performance_folder

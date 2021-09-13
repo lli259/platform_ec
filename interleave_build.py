@@ -103,7 +103,7 @@ class interleave_class():
                                 s,t=self.solve_perc_avg_time(re_list,total_time)
                                 si,sj,sa,sb=str(i),str(j),str(a),str(b)
                                 #print(si,sj,sa,sb,s,t)
-                                allfour.append((s,t,'_'.join([si,sj,sa,sb])))
+                                allfour.append((s,t,'-'.join([si,sj,sa,sb])))
             allfour=sorted(allfour)
             #time, best result and order in the time
             s,t,sched=allfour[-1]
@@ -130,7 +130,7 @@ class interleave_class():
                                 s,t=self.solve_perc_avg_time(re_list,total_time)
 
                                 si,sj,sa=str(i),str(j),str(a)
-                                allthree.append((s,t,'_'.join([si,sj,sa])))
+                                allthree.append((s,t,'-'.join([si,sj,sa])))
 
             allthree=sorted(allthree)
             s,t,sched=allthree[-1]
@@ -153,7 +153,7 @@ class interleave_class():
                                 re_list=self.interleave_run_two_lists(la,lb,time_each,total_time)
                                 s,t=self.solve_perc_avg_time(re_list,total_time)
                                 si,sj=str(i),str(j)
-                                allret.append((s,t,'_'.join([si,sj])))
+                                allret.append((s,t,'-'.join([si,sj])))
 
             allret=sorted(allret)
             s,t,sched=allret[-1]
@@ -166,6 +166,8 @@ def savetofile(fold,cont):
     with open(fold+'/'+'interleave.csv','w') as f:
         f.write('t,order\n')
         s,st,interl,time=cont
+        print('best solving','%:',s,'time:',st)
+        print('interleaving schedule',interl,time)
         f.write(str(time)+","+str(interl))
 
 
@@ -188,10 +190,19 @@ if __name__ == "__main__":
     df=df.set_index(df.columns[0])
     column=df.columns.values
 
+    if len(column) ==1:
+        print('ERROR: there should be at least two encodings!')
+        exit()
+
     if len(column) ==2:
         input_la,input_lb=df[column[0]],df[column[1]]
         intlv=interleave_class()
         best=intlv.interleave_diff_tm_n_ord_2list_(input_la,input_lb,1,int(int(cutoff)/len(column)),1,total_time=int(cutoff))
+        s,st,interl,time=best
+        interl=interl.split('-')
+        interl=[column[int(i)] for i in interl]
+        interl='-'.join(interl)
+        best=s,st,interl,time
         savetofile(interleave_out_folder,best)
 
     else:
@@ -199,10 +210,20 @@ if __name__ == "__main__":
             input_la,input_lb,input_lc=df[column[0]],df[column[1]],df[column[2]]
             intlv=interleave_class()
             best=intlv.interleave_diff_tm_n_ord_3list_(input_la,input_lb,input_lc,1,int(int(cutoff)/len(column)),1,total_time=int(cutoff))
+            s,st,interl,time=best
+            interl=interl.split('-')
+            interl=[column[int(i)] for i in interl]
+            interl='-'.join(interl)
+            best=s,st,interl,time
             savetofile(interleave_out_folder,best)
         else:
             input_la,input_lb,input_lc,input_ld=df[column[0]],df[column[1]],df[column[2]],df[column[3]]
 
             intlv=interleave_class()
             best=intlv.interleave_diff_tm_n_ord_4list_(input_la,input_lb,input_lc,input_ld,1,int(int(cutoff)/len(column)),1,total_time=int(cutoff))
+            s,st,interl,time=best
+            interl=interl.split('-')
+            interl=[column[int(i)] for i in interl]
+            interl='-'.join(interl)
+            best=s,st,interl,time
             savetofile(interleave_out_folder,best)

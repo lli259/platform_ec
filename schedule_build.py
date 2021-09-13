@@ -69,7 +69,8 @@ def build(cutoff,df_file):
     alltime_best=sorted(alltime_best,key=lambda v:v[0])
     best=alltime_best[-1]
     s,t,col_name1,col_name_2,t_given1,t_given2=best
-
+    print('best solving','%:',s,'time:',t)
+    print('schedule',col_name1,col_name_2,t_given1,t_given2)
     return col_name1,col_name_2,t_given1,t_given2
 
 
