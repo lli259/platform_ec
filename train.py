@@ -69,15 +69,17 @@ if args.p== [] or Encoding_candidate_gen in args.p:
     allcandidate=len(os.listdir(args.encodings[0]))
     #print('selected_candidate_number',args.num_candidate[0])
     selected_candidate_number=min(allcandidate,int(args.num_candidate[0]))
-    print('selected_candidate_number',selected_candidate_number)
     os.system('python selected_candidate.py --num_candidate '+ str(selected_candidate_number) 
+    +' --encodings ' +args.encodings[0]
+    +' --selected_encodings ' +args.selected_encodings[0]
     +' --cutoff ' + args.cutoff[0]
     +' --performance_data ' + args.performance_data[0])
+    print('selected_candidate_number:',selected_candidate_number)
 
 #Feature extraction
 if args.p== [] or Feature_extraction in args.p:
-    instances_folder=args.selected_encodings[0]
-    encodings_folder=args.encodings[0]
+    instances_folder=args.instances[0]
+    encodings_folder=args.selected_encodings[0]
     os.system('python2 feature_extract.py --instances_folder '+ instances_folder
     +' --encodings_folder ' + encodings_folder
     )
