@@ -60,6 +60,10 @@ python train.py –p 1
 default input:encodings
 default output:encodings
 
+ls encodings
+python train.py –p 1
+ls encodings
+
 2.Performance data generation
 
 python train.py -p 2 
@@ -68,8 +72,14 @@ python train.py -p 2
 
 default input:encodings, instances
 default output:
---performance: final performance
---performance_output:
+--performance: performance combination of all encodings to one file
+--performance_each_enc：performance combination of all instances for each encoding
+--performance_each_enc_tmp：output of all instances for each encoding
+
+ls encodings
+ls instances
+#python train.py -p 2
+cat performance/
 
 3.Encoding candidate generation
 
@@ -77,16 +87,32 @@ python train.py -p 3
 --performance_data performance_folder (default: performance)
 --num_candidate n (default: min(4, encodings))
 
-default input: performance
+default input: performance, encodings
 default output: 
 --performance_selected: selected performance
 --performance_output: performance analysis
+--encodings_selected: selected encodings
+
+
+cat performance/
+ls encodings
+python train.py -p 3 --num_candidate 4
+cat performance_selected/
+ls encodings_selected
+
+python train.py -p 3 --num_candidate 3
+cat performance_selected/
+ls encodings_selected
+
 
 4.Feature extraction
 python train.py -p 4
 
-default input: encodings, instances, performance_selected
+default input: encodings_selected, instances, performance_selected
 default output: features
+
+#python train.py -p 4
+cat features/
 
 5.Feature selection
 python train.py -p 5
@@ -94,11 +120,24 @@ python train.py -p 5
 default input: features, performance_selected
 default output: features_selected
 
+
+ls features/
+cat features_domain/
+cat performance_selected/
+python train.py -p 5
+cat features_selected/
+
+
 6.Model building
 python train.py -p 6
 
 default input: features_selected, performance_selected
-default output: ml_models, ml_hyper
+default output: ml_hyper,ml_models
+
+cat features_selected/
+cat performance_selected/
+python train.py -p 6
+
 
 
 7.Schedule building
