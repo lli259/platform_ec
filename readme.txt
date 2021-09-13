@@ -31,7 +31,7 @@ sklearn
 conda install -c potassco clingo=5.4 or conda install -c conda-forge clingo=5.4
 conda install numpy
 conda install pandas
-conda install sklearn
+conda install -c anaconda scikit-learn
 
 after installation, close and reopen terminal
 
