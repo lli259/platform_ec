@@ -36,6 +36,7 @@ def define_args(arg_parser):
     arg_parser.add_argument('--performance_select', nargs='*', default=['performance_selected'], help='Gringo input files')   
     arg_parser.add_argument('--num_candidate', nargs='*', default=['4'], help='Gringo input files')
     arg_parser.add_argument('--feature_data', nargs='*', default=['features'], help='Gringo input files')
+    arg_parser.add_argument('--feature_domain', nargs='*', default=['features_domain'], help='Gringo input files')
     arg_parser.add_argument('--feature_selected', nargs='*', default=['features_selected'], help='Gringo input files')
     arg_parser.add_argument('--ml_models_folder', nargs='*', default=['ml_models'], help='Gringo input files')    
     arg_parser.add_argument('--interleave_folder', nargs='*', default=['interleave'], help='Gringo input files') 
@@ -88,8 +89,9 @@ if args.p== [] or Feature_extraction in args.p:
 if args.p== [] or Feature_selection in args.p:
     feature_folder=args.feature_data[0]
     performance_folder=args.performance_select[0]
-
+    feature_folder_extra = args.feature_domain[0]
     os.system('python feature_selection.py --feature_folder '+ feature_folder
+    +' --feature_folder_extra ' + feature_folder_extra
     +' --performance_folder ' + performance_folder
     )
 
