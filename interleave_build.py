@@ -166,10 +166,12 @@ def savetofile(fold,cont):
     with open(fold+'/'+'interleave.csv','w') as f:
         f.write('t,order\n')
         s,st,interl,time=cont
-        print('best solving','%:',s,'time:',st)
+        #print('best solving','%:',s,'time:',st)
         print('interleaving schedule',interl,time)
         f.write(str(time)+","+str(interl))
 
+    with open('evaluation/result.csv','a') as f:
+        f.write('interleaving,'+str(round(s,2))+'\n')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -65,8 +65,10 @@ def printSvdPercAvgTime(p,runtime,maxtime):
 			sucs.append(i)
 	if len(sucs)!=0:
 		print(p,float(len(sucs))/len(runtime),"/",float(sum(sucs))/len(sucs))
+		return float(len(sucs))/len(runtime)
 	else:
 		print(p,float(0),"/",float(0))
+		return 0
 
 #split 80% trainset into validSet, trainSet with specified binNum and which bin.
 #bin=0, binNum=5.
@@ -316,6 +318,8 @@ def machine_learning(args):
     #print oracle
     printSvdPercAvgTime("oracle_portfolio",trainResult.Oracle_value.values,int(cutoff))
     print("\nEncoding selection performance:")
+
+    testResultSaving=[]
     for mName in "DT,RF,kNN".split(","):
 
         print(mName)
@@ -339,7 +343,8 @@ def machine_learning(args):
         bestruntime=[modelResults[bestname[i]].values[i]  for i in range(len(modelResults))]
         modelResults["1st_ham"]=bestname
         modelResults["1st_time"]=bestruntime
-        printSvdPercAvgTime("1st",bestruntime,int(cutoff))
+        sv_percent=printSvdPercAvgTime("1st",bestruntime,int(cutoff))
+        
 
         #the second predicted is the i[1]:(min_runtime, its_name)
         secondpredname=[i[1][1] for i in predictedList]
@@ -426,7 +431,8 @@ def machine_learning(args):
         bestruntime=[modelResults[bestname[i]].values[i]  for i in range(len(modelResults))]
         modelResults["1st_ham"]=bestname
         modelResults["1st_time"]=bestruntime
-        printSvdPercAvgTime("1st",bestruntime,int(cutoff))
+        sv_percent=printSvdPercAvgTime("1st",bestruntime,int(cutoff))
+        testResultSaving.append((sv_percent,mName))
 
         secondpredname=[i[1][1] for i in predictedList]
         secondname=["runtime_"+i.split("_")[1] for i in secondpredname]
@@ -444,7 +450,17 @@ def machine_learning(args):
 
         #modelResults.to_csv(("resultAnalysis/testing_result_analysis_"+mName+".csv"))
 
-
+    testResultSaving=sorted(testResultSaving)[-1]
+    method=str(testResultSaving[1])
+    result=str(testResultSaving[0])
+    #print(testResultSaving[-1])
+    
+    if not os.path.exists('evaluation'):
+        os.system('mkdir evaluation')
+    os.system('rm evaluation/result.csv')
+    with open('evaluation/result.csv','w') as f:
+        f.write('method,result\n')
+        f.write(method+','+result+'\n')
 
 
 

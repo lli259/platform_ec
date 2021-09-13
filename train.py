@@ -132,3 +132,14 @@ if args.p== [] or Interleaving_building in args.p:
     )
 
 
+#Interleaving Schedule building
+if args.p== [] or Evaluation in args.p:
+
+    performance_folder=args.performance_select[0]
+    #cutoff=args.cutoff[0]
+    cutoff='140'
+
+    os.system('python evaluation.py '
+    +' --performance_folder ' + performance_folder
+    +' --cutoff ' + cutoff
+    )
