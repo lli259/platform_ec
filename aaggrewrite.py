@@ -38,14 +38,14 @@ def name_outfile(encodings):
     """
         Given an array of encoding names, return an output file name
         This implementation renames the first encoding filename, appending
-          '_rewritten.lp' to the end of the filename, rewriting '.lp' if any
+          '_aagg.lp' to the end of the filename, rewriting '.lp' if any
     """
     ret = encodings[0]
     if len(ret) > 3:  # index size check
         # remove '.lp' if present
         if ret[(len(ret) - 3):] == '.lp':
             ret = ret[:(len(ret) - 3)]
-    return ret + '_rewritten.lp'
+    return ret + '_aagg.lp'
 
 
 def on_model(model):

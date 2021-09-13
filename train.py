@@ -49,7 +49,7 @@ args = parser.parse_args()
 
 if args.p== [] or Encoding_rewrite in args.p:
     for enc_file in os.listdir(args.encodings[0]):
-        if (not enc_file ==  None) and (not '_rewritten.lp' in enc_file):
+        if (not enc_file ==  None) and (not '_aagg.lp' in enc_file):
             os.system('python aaggrewrite.py '+args.encodings[0]+'/'+enc_file)
 
 '''
