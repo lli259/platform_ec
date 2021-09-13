@@ -99,8 +99,8 @@ if args.p== [] or Feature_selection in args.p:
 if args.p== [] or Model_building in args.p:
     feature_folder=args.feature_selected[0]
     performance_folder=args.performance_select[0]
-    cutoff=args.cutoff[0]
-
+    #cutoff=args.cutoff[0]
+    cutoff='100'
 
     os.system('python model_building.py --feature_folder '+ feature_folder 
     +' --performance_folder ' + performance_folder

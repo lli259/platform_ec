@@ -181,15 +181,14 @@ def machine_learning(args):
     print("--trainSet:",trainSet.shape)
     print("--validSet:",validSet.shape)
     print("testSet:",testSet.shape)
-    '''
+    
 
-    trainSet.to_csv(ml_outfolder+"/dataSplit/trainSet.csv",index=False)
-    validSet.to_csv(ml_outfolder+"/dataSplit/validSet.csv",index=False)
-    testSet.to_csv(ml_outfolder+"/dataSplit/testSet.csv",index=False)
-
-    '''
+    trainSet.to_csv(ml_outfolder+"/trainSet.csv",index=False)
+    validSet.to_csv(ml_outfolder+"/validSet.csv",index=False)
+    testSet.to_csv(ml_outfolder+"/testSet.csv",index=False)
 
     
+
     #train each model:
 
     #hyperparameters tuning
