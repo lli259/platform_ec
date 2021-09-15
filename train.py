@@ -41,8 +41,8 @@ def define_args(arg_parser):
     arg_parser.add_argument('--ml_models_folder', nargs='*', default=['ml_models'], help='Gringo input files')    
     arg_parser.add_argument('--interleave_folder', nargs='*', default=['interleave'], help='Gringo input files') 
     arg_parser.add_argument('--schedule_folder', nargs='*', default=['schedule'], help='Gringo input files') 
-    arg_parser.add_argument('--preprocessed', nargs='*', default=['0'], help='Gringo input files') 
-
+    arg_parser.add_argument('--preprocessed',action='store_true', help='Gringo input files') 
+    
 parser = argparse.ArgumentParser()
 define_args(parser)
 args = parser.parse_args()
@@ -51,7 +51,7 @@ args = parser.parse_args()
 
 if args.p== [0] or Encoding_rewrite in args.p :
     for enc_file in os.listdir(args.encodings[0]):
-        if (not enc_file ==  None) and (not 'aagg.lp' in enc_file):
+        if (not enc_file ==  None) and (not 'aagg.lp'  in enc_file):
             os.system('python aaggrewrite.py '+args.encodings[0]+'/'+enc_file
             +' --aggregate_form ' + args.rewrite_form[0]
             )
@@ -99,7 +99,7 @@ if args.p== [0] or Feature_selection in args.p:
     )
 
 #Machine Learning Model building
-if args.p== [0] or Model_building in args.p or '1' in args.preprocessed:
+if args.p== [0] or Model_building in args.p or args.preprocessed:
     feature_folder=args.feature_selected[0]
     performance_folder=args.performance_select[0]
     #cutoff=args.cutoff[0]
@@ -111,11 +111,11 @@ if args.p== [0] or Model_building in args.p or '1' in args.preprocessed:
     )
 
 #Schedule building
-if args.p== [0] or Schedule_building in args.p or '1' in args.preprocessed:
+if args.p== [0] or Schedule_building in args.p or args.preprocessed:
 
     performance_folder=args.performance_select[0]
     #cutoff=args.cutoff[0]
-    cutoff='200'
+    cutoff ='200'
 
     os.system('python schedule_build.py '
     +' --performance_folder ' + performance_folder
@@ -123,11 +123,11 @@ if args.p== [0] or Schedule_building in args.p or '1' in args.preprocessed:
     )
 
 #Interleaving Schedule building
-if args.p== [0] or Interleaving_building in args.p or '1' in args.preprocessed:
+if args.p== [0] or Interleaving_building in args.p or args.preprocessed:
 
     performance_folder=args.performance_select[0]
     #cutoff=args.cutoff[0]
-    cutoff='200'
+    cutoff ='200'
 
     os.system('python interleave_build.py '
     +' --performance_folder ' + performance_folder
@@ -136,11 +136,11 @@ if args.p== [0] or Interleaving_building in args.p or '1' in args.preprocessed:
 
 
 #Interleaving Schedule building
-if args.p== [0] or Evaluation in args.p or '1' in args.preprocessed:
+if args.p== [0] or Evaluation in args.p or args.preprocessed:
 
     performance_folder=args.performance_select[0]
     #cutoff=args.cutoff[0]
-    cutoff='200'
+    cutoff ='200'
 
     os.system('python evaluation.py '
     +' --performance_folder ' + performance_folder
