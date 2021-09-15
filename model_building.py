@@ -172,6 +172,7 @@ def machine_learning(args):
 
     testSet=allCombine.iloc[testIndex]
     trainSetAll=allCombine.iloc[trainIndex]
+    trainSetAll.to_csv(ml_outfolder+'/trainSetAll.csv')
     trainSet,validSet=splitTrainValid(trainSetAll,0,5)
 
     trainSet=pd.DataFrame(trainSet,columns=trainSetAll.columns)
