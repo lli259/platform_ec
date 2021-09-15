@@ -31,7 +31,7 @@ def define_args(arg_parser):
     arg_parser.add_argument('--selected_encodings', nargs='*', default=['encodings_selected'], help='Platform selected encodings')
     arg_parser.add_argument('--instances', nargs='*', default=['instances'], help='Gringo input files')
     arg_parser.add_argument('--cutoff', nargs='*', default=['200'], help='Gringo input files')
-    arg_parser.add_argument('--rewrite_form', nargs='*', default=['0'], help='Gringo input files')
+    arg_parser.add_argument('--rewrite_form', nargs='*', default=['1'], help='Gringo input files')
     arg_parser.add_argument('--performance_data', nargs='*', default=['performance'], help='Gringo input files')
     arg_parser.add_argument('--performance_select', nargs='*', default=['performance_selected'], help='Gringo input files')   
     arg_parser.add_argument('--num_candidate', nargs='*', default=['4'], help='Gringo input files')
@@ -52,7 +52,9 @@ args = parser.parse_args()
 if args.p== [0] or Encoding_rewrite in args.p :
     for enc_file in os.listdir(args.encodings[0]):
         if (not enc_file ==  None) and (not 'aagg.lp' in enc_file):
-            os.system('python aaggrewrite.py '+args.encodings[0]+'/'+enc_file)
+            os.system('python aaggrewrite.py '+args.encodings[0]+'/'+enc_file
+            +' --aggregate_form ' + args.rewrite_form[0]
+            )
 
 '''
 #performance data generation
