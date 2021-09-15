@@ -16,18 +16,25 @@ def define_args(arg_parser):
     
 
 
-def get_most_meaningful(feature_data,performance_data,select_number):
+def get_most_meaningful(feature_data,performance_data):
     alldata=feature_data.join(performance_data)
 
     cols=alldata.columns.values
+    #print(alldata.shape)
+    alldata=alldata.dropna()
+    #print(alldata.shape)
     X_Train=alldata.loc[:,cols[:-1]]
     Y_Train=alldata.loc[:,cols[-1:]]
-
-    number_features=min(X_Train.shape[1],select_number)
+    #exit()
+    number_features=min(int(X_Train.shape[1]/3),int(X_Train.shape[0]/10))
+    if number_features <=10:
+        number_features=min(10,X_Train.shape[1])
     #print(X_Train.shape,Y_Train.shape)
     #X_Train = StandardScaler().fit_transform(X_Train)
     #print(X_Train,Y_Train)
+    #print(X_Train.shape,Y_Train.shape)
     Y_Train=Y_Train.values.reshape(X_Train.shape[0],)
+    
     trainedforest = RandomForestRegressor(n_estimators=200,max_depth=20).fit(X_Train,Y_Train)
 
     feat_importances = pd.Series(trainedforest.feature_importances_, index= X_Train.columns)
@@ -36,10 +43,11 @@ def get_most_meaningful(feature_data,performance_data,select_number):
 
 def get_accuracy(most_meaning_f,feature_data,performance_data):
     alldata=feature_data.join(performance_data)
-
+    alldata=alldata.dropna()
     cols=alldata.columns.values
     X_Train=alldata.loc[:,most_meaning_f]
     Y_Train=alldata.loc[:,cols[-1:]]
+
     #X_Train = StandardScaler().fit_transform(X_Train)
     Y_Train=Y_Train.values.reshape(X_Train.shape[0],)
     trainedforest = RandomForestRegressor(n_estimators=200,max_depth=20).fit(X_Train,Y_Train)
@@ -81,6 +89,7 @@ def save_to_folder_with_domain(args,selected_features,selected_file,most_meaning
     feature_domain_selected=feature_domain[most_meaning_f_dm]
 
     feature_data_selected=feature_data_selected.join(feature_domain_selected)
+    feature_data_selected=feature_data_selected.dropna()
     feature_data_selected.to_csv(feature_outfolder+'/'+'features_select.csv')
 
 def select_f(args):
@@ -100,7 +109,7 @@ def select_f(args):
     for f_each_enc in feature_all_enc:
         feature_data=pd.read_csv(feature_folder+'/'+f_each_enc)
         feature_data=feature_data.set_index(feature_data.columns[0])
-        most_meaning_f=get_most_meaningful(feature_data,performance_data,8)
+        most_meaning_f=get_most_meaningful(feature_data,performance_data)
         score=get_accuracy(most_meaning_f,feature_data,performance_data)
         allscore.append((score,most_meaning_f,f_each_enc))
     allscore=sorted(allscore)
@@ -118,7 +127,7 @@ def select_f(args):
         feature_domain=feature_domain.set_index(feature_domain.columns[0])
         feature_domain=feature_domain.dropna()
         #print('domain feature selection...',feature_domain.shape)
-        most_meaning_f_dm=get_most_meaningful(feature_domain,performance_data,6)
+        most_meaning_f_dm=get_most_meaningful(feature_domain,performance_data)
         save_to_folder_with_domain(args,selected_features,selected_file,most_meaning_f_dm)
 
 
