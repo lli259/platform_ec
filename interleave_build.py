@@ -174,6 +174,8 @@ def savetofile(fold,cont):
 
 
 if __name__ == "__main__":
+    print("------------------------------------------------")
+    print('\nInterleaving building...')
     parser = argparse.ArgumentParser()
     define_args(parser)
     args = parser.parse_args()

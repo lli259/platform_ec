@@ -107,8 +107,8 @@ def machine_learning(args):
     #set PENALTY_TIME, we can set as 200, PAR10, or PARX
     PENALTY_TIME=int(cutoff)
 
-    np.random.seed(1)
-    random.seed(1)
+    np.random.seed(2)
+    random.seed(2)
 
     score_functions=[make_scorer(relative_score),make_scorer(max_relative_score),"neg_mean_squared_error"]
     # here choose "neg_mean_squared_error"
@@ -365,6 +365,7 @@ def machine_learning(args):
 
         #modelResults.to_csv(("resultAnalysis/training_result_analysis_"+mName+".csv"))
     print("\n")
+    '''    
     drawLine()
     print("validSet")
     print("Indivadual encoding and Oracle performance: ")
@@ -407,6 +408,7 @@ def machine_learning(args):
         #printSvdPercAvgTime("3rd",thirdruntime)
 
         #modelResults.to_csv(("resultAnalysis/validition_result_analysis_"+mName+".csv"))
+        '''
     print("\n")
     print("testSet")
     drawLine()
@@ -464,7 +466,7 @@ def machine_learning(args):
         f.write('method,solving,time\n')
         f.write(method+','+result_sol+','+result_tm+'\n')
 
-
+    print('\n')
 
 
 
@@ -473,6 +475,7 @@ def machine_learning(args):
 
 
 if __name__ == "__main__":
+    print('\nMachine learning model building...')
     parser = argparse.ArgumentParser()
     define_args(parser)
     args = parser.parse_args()

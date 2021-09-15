@@ -70,10 +70,13 @@ def build(cutoff,df):
     
     print('schedule',col_name1,col_name_2,t_given1,t_given2)
     print('training result solving','%:',round(s,2),'time:',round(t,2))
+    print('\n')
     return col_name1,col_name_2,t_given1,t_given2
 
 
 if __name__ == "__main__":
+    print("------------------------------------------------")
+    print('\nSchedule building...')
     parser = argparse.ArgumentParser()
     define_args(parser)
     args = parser.parse_args()
