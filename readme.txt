@@ -38,7 +38,7 @@ after installation, close and reopen terminal
 
 How to use:
 
-python train.py
+python train.py -p 0
 --encodings encodings_folder (default:encodings)
 --instances instances_folder (default:instances)
 --cutoff xxx (default:200s)
@@ -55,7 +55,7 @@ Run each step:
 
 python train.py –p 1
 --encodings encodings_folder (default:encodings)
---rewrite_form 0 1 2 3 (default: first available)
+--rewrite_form 1 2 3 (default: 1)
 
 default input:encodings
 default output:encodings
@@ -63,6 +63,9 @@ default output:encodings
 ls encodings
 python train.py –p 1
 ls encodings
+python train.py –p 1 --rewrite_form 2
+ls encodings
+
 
 2.Performance data generation
 
@@ -78,11 +81,11 @@ default output:
 
 ls encodings
 ls instances
-#python train.py -p 2
-cat performance/
+#python train.py -p 2 
+cat performance/performance.csv  |head -5
 
 3.Encoding candidate generation
-
+     
 python train.py -p 3
 --performance_data performance_folder (default: performance)
 --num_candidate n (default: min(4, encodings))
@@ -94,10 +97,10 @@ default output:
 --encodings_selected: selected encodings
 
 
-cat performance/
+cat performance/performance.csv  |head -5
 ls encodings
 python train.py -p 3 --num_candidate 4
-cat performance_selected/
+cat performance_selected/performance_selected.csv |head -5
 ls encodings_selected
 
 python train.py -p 3 --num_candidate 3
@@ -111,22 +114,21 @@ python train.py -p 4
 default input: encodings_selected, instances, performance_selected
 default output: features
 
-#python train.py -p 4
-cat features/
+#python train.py -p 4 
+ls features
 
 5.Feature selection
 python train.py -p 5
 
-default input: features, performance_selected
+default input: features,features_domain, performance_selected
 default output: features_selected
 
 
 ls features/
 cat features_domain/
-cat performance_selected/
+cat performance_selected/performance_selected.csv | head -3
 python train.py -p 5
-cat features_selected/
-
+cat features_selected/features_select.csv | head -5
 
 6.Model building
 python train.py -p 6
