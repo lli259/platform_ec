@@ -314,9 +314,9 @@ def machine_learning(args):
     print("Indivadual encoding and Oracle performance: ")
     #print per algorithm
     for alg in runtimeIndex:
-        printSvdPercAvgTime(alg.split("_")[1],trainResult[alg],int(cutoff))
+        printSvdPercAvgTime(alg.split("_")[1],trainResult[alg],TIME_MAX)
     #print oracle
-    printSvdPercAvgTime("oracle_portfolio",trainResult.Oracle_value.values,int(cutoff))
+    printSvdPercAvgTime("oracle_portfolio",trainResult.Oracle_value.values,TIME_MAX)
     print("\nEncoding selection performance:")
 
     testResultSaving=[]
@@ -343,7 +343,7 @@ def machine_learning(args):
         bestruntime=[modelResults[bestname[i]].values[i]  for i in range(len(modelResults))]
         modelResults["1st_ham"]=bestname
         modelResults["1st_time"]=bestruntime
-        sv_percent=printSvdPercAvgTime("1st",bestruntime,int(cutoff))
+        sv_percent=printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
         
 
         #the second predicted is the i[1]:(min_runtime, its_name)
@@ -368,8 +368,8 @@ def machine_learning(args):
     print("validSet")
     print("Indivadual encoding and Oracle performance: ")
     for alg in runtimeIndex:
-        printSvdPercAvgTime(alg+"",validResult[alg],int(cutoff))
-    printSvdPercAvgTime("oracle_portfolio",validResult.Oracle_value.values,int(cutoff))
+        printSvdPercAvgTime(alg+"",validResult[alg],TIME_MAX)
+    printSvdPercAvgTime("oracle_portfolio",validResult.Oracle_value.values,TIME_MAX)
     print("\nEncoding selection performance:")
     for mName in "DT,RF,kNN".split(","):
         print(mName)
@@ -389,7 +389,7 @@ def machine_learning(args):
         modelResults["1st_ham"]=bestname
         modelResults["1st_time"]=bestruntime
 
-        printSvdPercAvgTime("1st",bestruntime,int(cutoff))
+        printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
 
         secondpredname=[i[1][1] for i in predictedList]
         secondname=["runtime_"+i.split("_")[1] for i in secondpredname]
@@ -411,8 +411,8 @@ def machine_learning(args):
     drawLine()
     print("Indivadual encoding and Oracle performance: ")
     for alg in runtimeIndex:
-        printSvdPercAvgTime(alg+"",testResult[alg],int(cutoff))
-    printSvdPercAvgTime("oracle_portfolio",testResult.Oracle_value.values,int(cutoff))
+        printSvdPercAvgTime(alg+"",testResult[alg],TIME_MAX)
+    printSvdPercAvgTime("oracle_portfolio",testResult.Oracle_value.values,TIME_MAX)
     print("\nEncoding selection performance: ")
     for mName in "DT,RF,kNN".split(","):
         print(mName)
@@ -431,7 +431,7 @@ def machine_learning(args):
         bestruntime=[modelResults[bestname[i]].values[i]  for i in range(len(modelResults))]
         modelResults["1st_ham"]=bestname
         modelResults["1st_time"]=bestruntime
-        sv_percent=printSvdPercAvgTime("1st",bestruntime,int(cutoff))
+        sv_percent=printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
         testResultSaving.append((sv_percent,mName))
 
         secondpredname=[i[1][1] for i in predictedList]

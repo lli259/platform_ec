@@ -112,7 +112,7 @@ if args.p== [] or Schedule_building in args.p:
 
     performance_folder=args.performance_select[0]
     #cutoff=args.cutoff[0]
-    cutoff='140'
+    cutoff='200'
 
     os.system('python schedule_build.py '
     +' --performance_folder ' + performance_folder
@@ -124,7 +124,7 @@ if args.p== [] or Interleaving_building in args.p:
 
     performance_folder=args.performance_select[0]
     #cutoff=args.cutoff[0]
-    cutoff='140'
+    cutoff='200'
 
     os.system('python interleave_build.py '
     +' --performance_folder ' + performance_folder
@@ -137,7 +137,7 @@ if args.p== [] or Evaluation in args.p:
 
     performance_folder=args.performance_select[0]
     #cutoff=args.cutoff[0]
-    cutoff='140'
+    cutoff='200'
 
     os.system('python evaluation.py '
     +' --performance_folder ' + performance_folder
