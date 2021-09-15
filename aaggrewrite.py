@@ -1,4 +1,4 @@
-import clingo, argparse, sys, json, time
+import clingo, argparse, sys, json, time,os
 import constants
 from transformer import Transformer
 
@@ -13,16 +13,16 @@ def define_args(arg_parser):
                           '(3) not b - 1 = #count{ Y : f(Y) }, ..., not 0 = #count{ Y : f(Y) } '
     arg_parser.add_argument('encoding', nargs='*', default=[], help='Gringo input files')
     arg_parser.add_argument('-o', '--output', type=str, default='', help='Specify a file name for the output')
-    arg_parser.add_argument('--no-rewrite', action='store_true',
+    arg_parser.add_argument('--no_rewrite', action='store_true',
                             help='Disables all rewriting and simply parses the given program')
-    arg_parser.add_argument('--no-prompt', action='store_true',
+    arg_parser.add_argument('--no_prompt', action='store_true',
                             help='Disables confirmation prompts for proposed rule rewritings, automatically confirming any possible rewritings.')
-    arg_parser.add_argument('--use-anonymous-variable', action='store_true',
+    arg_parser.add_argument('--use_anonymous_variable', action='store_true',
                             help='Use anonymous variables in the aggregate')
-    arg_parser.add_argument('-r', '--run-clingo', action='store_true',
+    arg_parser.add_argument('-r', '--run_clingo', action='store_true',
                             help='Run clingo to ground and solve the program after performing any rewriting')
     arg_parser.add_argument('-d', '--debug', action='store_true', help='Run in debug mode')
-    arg_parser.add_argument('--aggregate-form', type=int, default=constants.AGGR_FORM1, help=aggregate_form_help)
+    arg_parser.add_argument('--aggregate_form', type=int, default=constants.AGGR_FORM1, help=aggregate_form_help)
 
 
 def open_files(encodings):
@@ -71,6 +71,7 @@ class Setting:
             self.OUTFILE = arguments.output
         else:
             self.OUTFILE = name_outfile(arguments.encoding)
+        self.VALID_AAGG=False
 
 
 class AutomatedAggregator:
@@ -109,6 +110,27 @@ class AutomatedAggregator:
         self.control.statistics['summary']['satisfiable'] = satisfiable
         self.control.statistics['summary']['times']['py-gs'] = ground_time + solve_time
         self.control.statistics['summary']['times']['py-total'] = parse_time + transform_time + ground_time + solve_time
+
+    def getOutFolder(self):
+
+
+        outFolder=''
+        outFolderSplit=self.setting.OUTFILE.split('/')
+
+        if len(outFolderSplit)==1:
+                outFolder=outFolderSplit[0]
+        else:
+            for split_num in range(len(outFolderSplit)-1):
+                outFolder+=outFolderSplit[split_num]+'/'
+        return outFolder
+
+
+
+    def deleteInvalid(self):
+        if not self.setting.VALID_AAGG:
+            os.system('rm '+self.setting.OUTFILE)
+            print('Deleting '+self.setting.OUTFILE)
+
 
     def run(self):
         """Parse and transform the program"""
@@ -161,3 +183,5 @@ if __name__ == "__main__":
     
     aagg = AutomatedAggregator(args)
     aagg.run()
+    aagg.deleteInvalid()
+        

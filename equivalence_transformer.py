@@ -388,10 +388,13 @@ def get_counting_function_args(counting_function, counting_vars):
 
     return reg_args, ret_var, anon_args
 
-def get_desired_input_output_form_pair_default(selection_dict):
+def get_desired_input_output_form_pair_default(selection_dict,num):
+
+    return selection_dict[num][0], selection_dict[num][1]
+
+def get_desired_input_output_form_pair_fixed(selection_dict):
 
     return selection_dict[1][0], selection_dict[1][1]
-
 
 def get_desired_input_output_form_pair(selection_dict):
     """
@@ -577,19 +580,22 @@ class EquivalenceTransformer:
 
     def process_norm(self,valid_output_forms,rule_original):
         equiv_output_forms = self.rewritable_forms()  # Determines available output forms for this rule
-
+        
+        #self.base_transformer.Setting.VALID_AAGG=True
+        
         if self.base_transformer.Setting.DEBUG:
             print ("equivalence_transformer: valid output forms:  " + str(equiv_output_forms))
-
+        #print('process_norm')
         selection_dict = print_valid_output_forms(valid_output_forms)
-        desired_input, desired_output = get_desired_input_output_form_pair_default(selection_dict)
+        desired_input, desired_output = get_desired_input_output_form_pair_default(selection_dict,self.base_transformer.Setting.AGGR_FORM)
 
         #if self.base_transformer.Setting.AGGR_FORM in equiv_output_forms:
         if desired_output in equiv_output_forms:        
             self.rewrite_rule_norm(desired_output)
             self.print_rewrite(rule_original)
             self.confirm_rewrite_default(rule_original)  # Undoes rewriting if user denies rewrite
-
+            self.base_transformer.Setting.VALID_AAGG=True
+            
         elif len(equiv_output_forms) > 0:
             # Equivalent output forms exist, but not for the requested form.
             # Currently this only occurs for forms (2) and (3) because a cyclic dependency exists
@@ -600,6 +606,10 @@ class EquivalenceTransformer:
             print ("equivalence_transformer: valid output forms:  " + str(
                 valid_output_forms))
         #print(valid_output_forms.values())
+        #print('process_aagg')
+        self.base_transformer.Setting.VALID_AAGG=True
+        
+
         sum_empty=sum([1 if i==[] else 0 for i in valid_output_forms.values()])
         if sum_empty != 4:  # Any rewriting possible
 
@@ -608,7 +618,7 @@ class EquivalenceTransformer:
             #       Can handle multiple rewritings within a rule by performing
             #        every combination of rewriting, and giving each its own id
             selection_dict = print_valid_output_forms(valid_output_forms)
-            desired_input, desired_output = get_desired_input_output_form_pair_default(selection_dict)
+            desired_input, desired_output = get_desired_input_output_form_pair_default(selection_dict,self.base_transformer.Setting.AGGR_FORM)
 
             
 
