@@ -65,10 +65,10 @@ def printSvdPercAvgTime(p,runtime,maxtime):
 			sucs.append(i)
 	if len(sucs)!=0:
 		print(p,float(len(sucs))/len(runtime),"/",float(sum(sucs))/len(sucs))
-		return float(len(sucs))/len(runtime)
+		return float(len(sucs))/len(runtime), float(sum(sucs))/len(sucs)
 	else:
 		print(p,float(0),"/",float(0))
-		return 0
+		return 0,0
 
 #split 80% trainset into validSet, trainSet with specified binNum and which bin.
 #bin=0, binNum=5.
@@ -186,9 +186,9 @@ def machine_learning(args):
     print("testSet:",testSet.shape)
     
 
-    trainSet.to_csv(ml_outfolder+"/trainSet.csv",index=False)
-    validSet.to_csv(ml_outfolder+"/validSet.csv",index=False)
-    testSet.to_csv(ml_outfolder+"/testSet.csv",index=False)
+    trainSet.to_csv(ml_outfolder+"/trainSet.csv")
+    validSet.to_csv(ml_outfolder+"/validSet.csv")
+    testSet.to_csv(ml_outfolder+"/testSet.csv")
 
     
 
@@ -344,7 +344,7 @@ def machine_learning(args):
         bestruntime=[modelResults[bestname[i]].values[i]  for i in range(len(modelResults))]
         modelResults["1st_ham"]=bestname
         modelResults["1st_time"]=bestruntime
-        sv_percent=printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
+        printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
         
 
         #the second predicted is the i[1]:(min_runtime, its_name)
@@ -432,8 +432,8 @@ def machine_learning(args):
         bestruntime=[modelResults[bestname[i]].values[i]  for i in range(len(modelResults))]
         modelResults["1st_ham"]=bestname
         modelResults["1st_time"]=bestruntime
-        sv_percent=printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
-        testResultSaving.append((sv_percent,mName))
+        sv_percent,sv_time=printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
+        testResultSaving.append((sv_percent,sv_time,mName))
 
         secondpredname=[i[1][1] for i in predictedList]
         secondname=["runtime_"+i.split("_")[1] for i in secondpredname]
@@ -452,16 +452,17 @@ def machine_learning(args):
         #modelResults.to_csv(("resultAnalysis/testing_result_analysis_"+mName+".csv"))
 
     testResultSaving=sorted(testResultSaving)[-1]
-    method=str(testResultSaving[1])
-    result=str(testResultSaving[0])
+    method=str(testResultSaving[2])
+    result_sol=str(testResultSaving[0])
+    result_tm=str(testResultSaving[1])
     #print(testResultSaving[-1])
     
     if not os.path.exists('evaluation'):
         os.system('mkdir evaluation')
     os.system('rm evaluation/result.csv')
     with open('evaluation/result.csv','w') as f:
-        f.write('method,result\n')
-        f.write(method+','+result+'\n')
+        f.write('method,solving,time\n')
+        f.write(method+','+result_sol+','+result_tm+'\n')
 
 
 

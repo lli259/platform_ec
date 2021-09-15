@@ -166,12 +166,12 @@ def savetofile(fold,cont):
     with open(fold+'/'+'interleave.csv','w') as f:
         f.write('t,order\n')
         s,st,interl,time=cont
-        #print('best solving','%:',s,'time:',st)
+        
         print('interleaving schedule',interl,time)
+        print('training result: solving','%:',round(s,2),'time:',round(st,2))
         f.write(str(time)+","+str(interl))
 
-    with open('evaluation/result.csv','a') as f:
-        f.write('interleaving,'+str(round(s,2))+'\n')
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -190,6 +190,11 @@ if __name__ == "__main__":
 
     df=pd.read_csv(df_file)
     df=df.set_index(df.columns[0])
+
+    train_df=pd.read_csv('ml_models/trainSetAll.csv')
+    train_df=train_df.set_index(train_df.columns[0])
+    df=df.loc[train_df.index]
+
     column=df.columns.values
 
     if len(column) ==1:
@@ -200,9 +205,28 @@ if __name__ == "__main__":
         input_la,input_lb=df[column[0]],df[column[1]]
         intlv=interleave_class()
         best=intlv.interleave_diff_tm_n_ord_2list_(input_la,input_lb,1,int(int(cutoff)/len(column)),1,total_time=int(cutoff))
+
+        #convert index to name in interl
         s,st,interl,time=best
         interl=interl.split('-')
         interl=[column[int(i)] for i in interl]
+
+
+        #test on test set
+        df=pd.read_csv(df_file)
+        df=df.set_index(df.columns[0])
+        test_df=pd.read_csv('ml_models/testSet.csv')
+        test_df=test_df.set_index(test_df.columns[0])
+        df=df.loc[test_df.index]
+
+        la=df[interl[0]]
+        lb=df[interl[1]]
+        re_list=intlv.interleave_run_two_lists(la,lb,time,int(cutoff))
+        s,t=intlv.solve_perc_avg_time(re_list,int(cutoff))
+        with open('evaluation/result.csv','a') as f:
+            f.write('interleaving,'+str(round(s,2))+'\n')
+
+        #save result
         interl='-'.join(interl)
         best=s,st,interl,time
         savetofile(interleave_out_folder,best)
@@ -212,9 +236,29 @@ if __name__ == "__main__":
             input_la,input_lb,input_lc=df[column[0]],df[column[1]],df[column[2]]
             intlv=interleave_class()
             best=intlv.interleave_diff_tm_n_ord_3list_(input_la,input_lb,input_lc,1,int(int(cutoff)/len(column)),1,total_time=int(cutoff))
+
+            #convert index to name in interl
             s,st,interl,time=best
             interl=interl.split('-')
             interl=[column[int(i)] for i in interl]
+
+
+            #test on test set
+            df=pd.read_csv(df_file)
+            df=df.set_index(df.columns[0])
+            test_df=pd.read_csv('ml_models/testSet.csv')
+            test_df=test_df.set_index(test_df.columns[0])
+            df=df.loc[test_df.index]
+
+            la=df[interl[0]]
+            lb=df[interl[1]]
+            lc=df[interl[2]]
+            re_list=intlv.interleave_run_three_lists(la,lb,lc,time,int(cutoff))
+            s,t=intlv.solve_perc_avg_time(re_list,int(cutoff))
+            with open('evaluation/result.csv','a') as f:
+                f.write('interleaving,'+str(round(s,2))+'\n')
+
+            #save result
             interl='-'.join(interl)
             best=s,st,interl,time
             savetofile(interleave_out_folder,best)
@@ -223,9 +267,32 @@ if __name__ == "__main__":
 
             intlv=interleave_class()
             best=intlv.interleave_diff_tm_n_ord_4list_(input_la,input_lb,input_lc,input_ld,1,int(int(cutoff)/len(column)),1,total_time=int(cutoff))
+
+            #convert index to name in interl
             s,st,interl,time=best
             interl=interl.split('-')
             interl=[column[int(i)] for i in interl]
+            
+
+
+            #test on test set
+            df=pd.read_csv(df_file)
+            df=df.set_index(df.columns[0])
+            test_df=pd.read_csv('ml_models/testSet.csv')
+            test_df=test_df.set_index(test_df.columns[0])
+            df=df.loc[test_df.index]
+
+            la=df[interl[0]]
+            lb=df[interl[1]]
+            lc=df[interl[2]]
+            ld=df[interl[3]]
+
+            re_list=intlv.interleave_run_four_lists(la,lb,lc,ld,time,int(cutoff))
+            s,t=intlv.solve_perc_avg_time(re_list,int(cutoff))
+            with open('evaluation/result.csv','a') as f:
+                f.write('interleaving,'+str(round(s,2))+','+str(round(t,2))+'\n')
+
+            #save result
             interl='-'.join(interl)
             best=s,st,interl,time
             savetofile(interleave_out_folder,best)

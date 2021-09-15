@@ -38,11 +38,9 @@ def get_seq_diff_time(df,col_name1,col_name_2,t_given1,t_given2,cutoff):
     leng=float(len(runtime_list))
     return solved/leng,total_time/leng
 
-def build(cutoff,df_file):
+def build(cutoff,df):
 
     cutoff=int(cutoff)
-    df=pd.read_csv(df_file)
-    df=df.set_index(df.columns[0])
     cols=df.columns.values
 
     
@@ -69,12 +67,9 @@ def build(cutoff,df_file):
     alltime_best=sorted(alltime_best,key=lambda v:v[0])
     best=alltime_best[-1]
     s,t,col_name1,col_name_2,t_given1,t_given2=best
-    #print('best solving','%:',s,'time:',t)
+    
     print('schedule',col_name1,col_name_2,t_given1,t_given2)
-
-    with open('evaluation/result.csv','a') as f:
-        f.write('schedule,'+str(round(s,2))+'\n')
-
+    print('training result solving','%:',round(s,2),'time:',round(t,2))
     return col_name1,col_name_2,t_given1,t_given2
 
 
@@ -89,8 +84,26 @@ if __name__ == "__main__":
 
     df_file=os.listdir(performance_folder)[0]
     df_file=performance_folder+'/'+df_file
+    df=pd.read_csv(df_file)
+    df=df.set_index(df.columns[0])
+    #print(df.shape)
+    train_df=pd.read_csv('ml_models/trainSetAll.csv')
+    train_df=train_df.set_index(train_df.columns[0])
+    df=df.loc[train_df.index]
+    #print(df.shape)
+    #train
+    col_name1,col_name_2,t_given1,t_given2=build(cutoff,df)
+    #test
 
-    col_name1,col_name_2,t_given1,t_given2=build(cutoff,df_file)
+    df=pd.read_csv(df_file)
+    df=df.set_index(df.columns[0])
+    test_df=pd.read_csv('ml_models/testSet.csv')
+    test_df=test_df.set_index(test_df.columns[0])
+    df=df.loc[test_df.index]
+    s,t=get_seq_diff_time(df,col_name1,col_name_2,t_given1,t_given2,int(cutoff))
+
+    with open('evaluation/result.csv','a') as f:
+        f.write('schedule,'+str(round(s,2))+','+str(round(t,2))+'\n')
 
     if not os.path.exists(schedule_out_folder):
         os.system('mkdir '+schedule_out_folder)
