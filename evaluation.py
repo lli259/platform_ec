@@ -22,4 +22,16 @@ if __name__ == "__main__":
         results=f.readlines()
     
     for l in results:
-        print(l)
+        print(l[:-1])
+    
+    df=pd.read_csv('evaluation/result.csv')
+    df=df.sort_values(by=['solving','time'])
+    print('\nBest Solution:',df.iloc[-1]['method'])
+    print('\n......................')
+    print('\nResult evaluating...')
+    with open('evaluation/result2.csv','r') as f:
+        results=f.readlines()
+    for l in results:
+        print(l[:-1])
+        if 'kNN' in l[:3]:
+            print('\n')
