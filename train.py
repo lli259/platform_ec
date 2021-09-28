@@ -70,15 +70,11 @@ if args.p== [0] or Performance_gen in args.p:
 #Encoding_candidate generation
 if args.p== [0] or Encoding_candidate_gen in args.p:
 
-    allcandidate=len(os.listdir(args.encodings[0]))
-    #print('selected_candidate_number',args.num_candidate[0])
-    selected_candidate_number=min(allcandidate,int(args.num_candidate[0]))
-    os.system('python selected_candidate.py --num_candidate '+ str(selected_candidate_number) 
+    os.system('python selected_candidate.py '
     +' --encodings ' +args.encodings[0]
     +' --selected_encodings ' +args.selected_encodings[0]
     +' --cutoff ' + args.cutoff[0]
     +' --performance_data ' + args.performance_data[0])
-    print('selected_candidate_number:',selected_candidate_number)
 
 #Feature extraction
 if args.p== [0] or Feature_extraction in args.p:

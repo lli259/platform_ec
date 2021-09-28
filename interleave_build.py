@@ -164,10 +164,9 @@ class interleave_class():
 
 def savetofile(fold,cont):
     with open(fold+'/'+'interleave.csv','w') as f:
-        f.write('t,order\n')
-        s,st,interl,time=cont
-        
-        print('interleaving schedule',interl,time)
+        f.write('group,t,order\n')
+        s,st,interl,time,g=cont
+        print('interleaving schedule',g,interl,time)
         print('training result: solving','%:',round(s,2),'time:',round(st,2))
         f.write(str(time)+","+str(interl))
 
@@ -180,64 +179,39 @@ if __name__ == "__main__":
     define_args(parser)
     args = parser.parse_args()
 
-    performance_folder=args.performance_folder[0]
+    performance_folder_input=args.performance_folder[0]
     cutoff=args.cutoff[0]
     interleave_out_folder=args.interleave_out[0]
 
-    df_file=os.listdir(performance_folder)[0]
-    df_file=performance_folder+'/'+df_file
+
 
     if not os.path.exists(interleave_out_folder):
         os.system('mkdir '+interleave_out_folder)
 
-    df=pd.read_csv(df_file)
-    df=df.set_index(df.columns[0])
+    performance_folders=os.listdir(performance_folder_input)
+    allresults=[]
+    for performance_folder_group in performance_folders:
+        performance_folder=performance_folder_input+'/'+performance_folder_group
+        df_file=os.listdir(performance_folder)[0]
+        df_file=performance_folder+'/'+df_file
 
-    train_df=pd.read_csv('ml_models/trainSetAll.csv')
-    train_df=train_df.set_index(train_df.columns[0])
-    df=df.loc[train_df.index]
-
-    column=df.columns.values
-
-    if len(column) ==1:
-        print('ERROR: there should be at least two encodings!')
-        exit()
-
-    if len(column) ==2:
-        input_la,input_lb=df[column[0]],df[column[1]]
-        intlv=interleave_class()
-        best=intlv.interleave_diff_tm_n_ord_2list_(input_la,input_lb,1,int(int(cutoff)/len(column)),1,total_time=int(cutoff))
-
-        #convert index to name in interl
-        s,st,interl,time=best
-        interl=interl.split('-')
-        interl=[column[int(i)] for i in interl]
-
-
-        #test on test set
         df=pd.read_csv(df_file)
         df=df.set_index(df.columns[0])
-        test_df=pd.read_csv('ml_models/testSet.csv')
-        test_df=test_df.set_index(test_df.columns[0])
-        df=df.loc[test_df.index]
 
-        la=df[interl[0]]
-        lb=df[interl[1]]
-        re_list=intlv.interleave_run_two_lists(la,lb,time,int(cutoff))
-        s,t=intlv.solve_perc_avg_time(re_list,int(cutoff))
-        with open('evaluation/result.csv','a') as f:
-            f.write('interleaving,'+str(round(s,2))+'\n')
+        train_df=pd.read_csv('ml_models/'+performance_folder_group+'/trainSetAll.csv')
+        train_df=train_df.set_index(train_df.columns[0])
+        df=df.loc[train_df.index]
 
-        #save result
-        interl='-'.join(interl)
-        best=s,st,interl,time
-        savetofile(interleave_out_folder,best)
+        column=df.columns.values
 
-    else:
-        if len(column) ==3:
-            input_la,input_lb,input_lc=df[column[0]],df[column[1]],df[column[2]]
+        if len(column) ==1:
+            print('ERROR: there should be at least two encodings!')
+            exit()
+
+        if len(column) ==2:
+            input_la,input_lb=df[column[0]],df[column[1]]
             intlv=interleave_class()
-            best=intlv.interleave_diff_tm_n_ord_3list_(input_la,input_lb,input_lc,1,int(int(cutoff)/len(column)),1,total_time=int(cutoff))
+            best=intlv.interleave_diff_tm_n_ord_2list_(input_la,input_lb,1,int(int(cutoff)/len(column)),1,total_time=int(cutoff))
 
             #convert index to name in interl
             s,st,interl,time=best
@@ -248,53 +222,152 @@ if __name__ == "__main__":
             #test on test set
             df=pd.read_csv(df_file)
             df=df.set_index(df.columns[0])
-            test_df=pd.read_csv('ml_models/testSet.csv')
+            test_df=pd.read_csv('ml_models/'+performance_folder_group+'/testSet.csv')
             test_df=test_df.set_index(test_df.columns[0])
             df=df.loc[test_df.index]
 
             la=df[interl[0]]
             lb=df[interl[1]]
-            lc=df[interl[2]]
-            re_list=intlv.interleave_run_three_lists(la,lb,lc,time,int(cutoff))
+            re_list=intlv.interleave_run_two_lists(la,lb,time,int(cutoff))
             s,t=intlv.solve_perc_avg_time(re_list,int(cutoff))
+
+
+            interlsave='-'.join(interl)
             with open('evaluation/result.csv','a') as f:
-                f.write('interleaving,'+str(round(s,2))+'\n')
+                f.write('interleaving_'+performance_folder_group+'_'+interlsave+','+str(round(s,2))+','+str(round(t,2))+'\n')
 
+
+            #test on leave out set
+            df=pd.read_csv(df_file)
+            df=df.set_index(df.columns[0])
+            leave_df=pd.read_csv('ml_models/'+performance_folder_group+'/leaveSet.csv')
+            leave_df=leave_df.set_index(leave_df.columns[0])
+            df=df.loc[leave_df.index]
+
+            la=df[interl[0]]
+            lb=df[interl[1]]
+            re_list=intlv.interleave_run_two_lists(la,lb,time,int(cutoff))
+            s,t=intlv.solve_perc_avg_time(re_list,int(cutoff))
+
+
+            interlsave='-'.join(interl)
+            with open('evaluation/result2.csv','a') as f:
+                f.write('interleaving_'+performance_folder_group+'_'+interlsave+','+str(round(s,2))+','+str(round(t,2))+'\n')
             #save result
-            interl='-'.join(interl)
-            best=s,st,interl,time
-            savetofile(interleave_out_folder,best)
-        else:
-            input_la,input_lb,input_lc,input_ld=df[column[0]],df[column[1]],df[column[2]],df[column[3]]
-
-            intlv=interleave_class()
-            best=intlv.interleave_diff_tm_n_ord_4list_(input_la,input_lb,input_lc,input_ld,1,int(int(cutoff)/len(column)),1,total_time=int(cutoff))
-
-            #convert index to name in interl
-            s,st,interl,time=best
-            interl=interl.split('-')
-            interl=[column[int(i)] for i in interl]
             
+            best=s,st,interl,time,performance_folder_group
+            allresults.append(best)
+            
+        else:
+            if len(column) ==3:
+                input_la,input_lb,input_lc=df[column[0]],df[column[1]],df[column[2]]
+                intlv=interleave_class()
+                best=intlv.interleave_diff_tm_n_ord_3list_(input_la,input_lb,input_lc,1,int(int(cutoff)/len(column)),1,total_time=int(cutoff))
+
+                #convert index to name in interl
+                s,st,interl,time=best
+                interl=interl.split('-')
+                interl=[column[int(i)] for i in interl]
 
 
-            #test on test set
-            df=pd.read_csv(df_file)
-            df=df.set_index(df.columns[0])
-            test_df=pd.read_csv('ml_models/testSet.csv')
-            test_df=test_df.set_index(test_df.columns[0])
-            df=df.loc[test_df.index]
+                #test on test set
+                df=pd.read_csv(df_file)
+                df=df.set_index(df.columns[0])
+                test_df=pd.read_csv('ml_models/'+performance_folder_group+'/testSet.csv')
+                test_df=test_df.set_index(test_df.columns[0])
+                df=df.loc[test_df.index]
 
-            la=df[interl[0]]
-            lb=df[interl[1]]
-            lc=df[interl[2]]
-            ld=df[interl[3]]
+                la=df[interl[0]]
+                lb=df[interl[1]]
+                lc=df[interl[2]]
+                re_list=intlv.interleave_run_three_lists(la,lb,lc,time,int(cutoff))
+                s,t=intlv.solve_perc_avg_time(re_list,int(cutoff))
 
-            re_list=intlv.interleave_run_four_lists(la,lb,lc,ld,time,int(cutoff))
-            s,t=intlv.solve_perc_avg_time(re_list,int(cutoff))
-            with open('evaluation/result.csv','a') as f:
-                f.write('interleaving,'+str(round(s,2))+','+str(round(t,2))+'\n')
+                interlsave='-'.join(interl)
+                with open('evaluation/result.csv','a') as f:
+                    f.write('interleaving_'+performance_folder_group+'_'+interlsave+','+str(round(s,2))+','+str(round(t,2))+'\n')
 
-            #save result
-            interl='-'.join(interl)
-            best=s,st,interl,time
-            savetofile(interleave_out_folder,best)
+
+                #test on leave out set
+                df=pd.read_csv(df_file)
+                df=df.set_index(df.columns[0])
+                leave_df=pd.read_csv('ml_models/'+performance_folder_group+'/leaveSet.csv')
+                leave_df=leave_df.set_index(leave_df.columns[0])
+                df=df.loc[leave_df.index]
+
+                la=df[interl[0]]
+                lb=df[interl[1]]
+                lc=df[interl[2]]
+                re_list=intlv.interleave_run_three_lists(la,lb,lc,time,int(cutoff))
+                s,t=intlv.solve_perc_avg_time(re_list,int(cutoff))
+
+                interlsave='-'.join(interl)
+                with open('evaluation/result2.csv','a') as f:
+                    f.write('interleaving_'+performance_folder_group+'_'+interlsave+','+str(round(s,2))+','+str(round(t,2))+'\n')
+
+                #save result
+                
+                best=s,st,interl,time,performance_folder_group
+                allresults.append(best)
+                #savetofile(interleave_out_folder,best)
+            else:
+                input_la,input_lb,input_lc,input_ld=df[column[0]],df[column[1]],df[column[2]],df[column[3]]
+
+                intlv=interleave_class()
+                best=intlv.interleave_diff_tm_n_ord_4list_(input_la,input_lb,input_lc,input_ld,1,int(int(cutoff)/len(column)),1,total_time=int(cutoff))
+
+                #convert index to name in interl
+                s,st,interl,time=best
+                interl=interl.split('-')
+                interl=[column[int(i)] for i in interl]
+                
+
+
+                #test on test set
+                df=pd.read_csv(df_file)
+                df=df.set_index(df.columns[0])
+                test_df=pd.read_csv('ml_models/'+performance_folder_group+'/testSet.csv')
+                test_df=test_df.set_index(test_df.columns[0])
+                df=df.loc[test_df.index]
+
+                la=df[interl[0]]
+                lb=df[interl[1]]
+                lc=df[interl[2]]
+                ld=df[interl[3]]
+
+                re_list=intlv.interleave_run_four_lists(la,lb,lc,ld,time,int(cutoff))
+                s,t=intlv.solve_perc_avg_time(re_list,int(cutoff))
+
+                interlsave='-'.join(interl)
+                with open('evaluation/result.csv','a') as f:
+                    f.write('interleaving_'+performance_folder_group+'_'+interlsave+','+str(round(s,2))+','+str(round(t,2))+'\n')
+
+
+                #test on leave out set
+                df=pd.read_csv(df_file)
+                df=df.set_index(df.columns[0])
+                leave_df=pd.read_csv('ml_models/'+performance_folder_group+'/leaveSet.csv')
+                leave_df=leave_df.set_index(leave_df.columns[0])
+                df=df.loc[leave_df.index]
+
+                la=df[interl[0]]
+                lb=df[interl[1]]
+                lc=df[interl[2]]
+                ld=df[interl[3]]
+
+                re_list=intlv.interleave_run_four_lists(la,lb,lc,ld,time,int(cutoff))
+                s,t=intlv.solve_perc_avg_time(re_list,int(cutoff))
+
+                interlsave='-'.join(interl)
+                with open('evaluation/result2.csv','a') as f:
+                    f.write('interleaving_'+performance_folder_group+'_'+interlsave+','+str(round(s,2))+','+str(round(t,2))+'\n')
+
+                #save result
+                
+                best=s,st,interl,time,performance_folder_group
+                allresults.append(best)
+                #savetofile(interleave_out_folder,best)
+
+    allresults=sorted(allresults)            
+    bestresult=allresults[-1]
+    savetofile(interleave_out_folder,bestresult)

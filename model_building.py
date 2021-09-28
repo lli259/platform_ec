@@ -29,9 +29,21 @@ def define_args(arg_parser):
 
 def checkMakeFolder(fdname):
     if not os.path.exists(fdname):
-        os.system("mkdir "+fdname)
+        os.makedirs(fdname)
 
+def cleanFolder(fdname):
+    if os.path.exists(fdname):
+        ans=input('need to retrain models? y/n')
+        if ans =='y':
+            os.system('rm -r '+fdname+'/*')
 
+#write to evaluation file2 
+#evaluation/result2.csv
+def write2eva2(algname,slv,time):
+    fname='evaluation/result2.csv'
+    with open (fname,'a') as f:
+        cont=','.join([algname,str(slv),str(time)])
+        f.write(cont+'\n')
 #the objective function to minimize, tuning hyperparameters
 #relative_score
 #max_relative_score
@@ -72,7 +84,7 @@ def printSvdPercAvgTime(p,runtime,maxtime):
 
 #split 80% trainset into validSet, trainSet with specified binNum and which bin.
 #bin=0, binNum=5.
-#the first bin for validing, rest 4bins for training.
+#the last bin for validing, first 4bins for training.
 def splitTrainValid(datasetX,bin,binNum):
 	bin_size=int(math.ceil(len(datasetX)/binNum))
 	if bin==0:
@@ -80,21 +92,20 @@ def splitTrainValid(datasetX,bin,binNum):
 	elif bin==binNum-1:
 		return np.array(datasetX[:(binNum-1)*bin_size]),np.array(datasetX[-bin_size:])
 	else:
-		return np.append(datasetX[:bin_size*(i)],datasetX[bin_size*(i+1):],axis=0),np.array(datasetX[bin_size*(i):bin_size*(i+1)])
+		return np.append(datasetX[:bin_size*(bin)],datasetX[bin_size*(bin+1):],axis=0),np.array(datasetX[bin_size*(bin):bin_size*(bin+1)])
 
 
 
 def drawLine():
     print("------------------------------------------------")
 
-def machine_learning(args):
-    feature_folder=args.feature_folder[0]
-    performance_folder=args.performance_folder[0]
+def machine_learning(args,ml_group):
+    feature_folder=args.feature_folder[0]+'/'+ml_group
+    performance_folder=args.performance_folder[0]+'/'+ml_group
     cutoff=args.cutoff[0]
-    ml_outfolder=args.ml_models_folder[0]
 
-    
-    ml_hyperfolder=args.ml_hyper_folder[0]
+    ml_outfolder=args.ml_models_folder[0]+'/'+ml_group
+    ml_hyperfolder=args.ml_hyper_folder[0]+'/'+ml_group
 
     checkMakeFolder(ml_hyperfolder)
     checkMakeFolder(ml_outfolder)
@@ -107,8 +118,8 @@ def machine_learning(args):
     #set PENALTY_TIME, we can set as 200, PAR10, or PARX
     PENALTY_TIME=int(cutoff)
 
-    np.random.seed(2)
-    random.seed(2)
+    np.random.seed(1)
+    random.seed(1)
 
     score_functions=[make_scorer(relative_score),make_scorer(max_relative_score),"neg_mean_squared_error"]
     # here choose "neg_mean_squared_error"
@@ -162,16 +173,27 @@ def machine_learning(args):
     #shuffle
     allCombine=allCombine.iloc[np.random.permutation(len(allCombine))]
 
-    # get testing data 20% of the full data:
-    testIndex=random.sample(range(allCombine.shape[0]), int(allCombine.shape[0]*0.2))
 
-    trainIndex=list(range(allCombine.shape[0]))
+    # get leave out data 15% of the full data:
+    leaveIndex=random.sample(range(allCombine.shape[0]), int(allCombine.shape[0]*0.15))
+
+    mlIndex=list(range(allCombine.shape[0]))
+    for i in leaveIndex:
+        if i in mlIndex:
+            mlIndex.remove(i)
+
+    leaveSet=allCombine.iloc[leaveIndex]
+    mlSet=allCombine.iloc[mlIndex]
+    # get testing data 20% of the full data:
+    testIndex=random.sample(range(mlSet.shape[0]), int(mlSet.shape[0]*0.2))
+
+    trainIndex=list(range(mlSet.shape[0]))
     for i in testIndex:
         if i in trainIndex:
             trainIndex.remove(i)
 
-    testSet=allCombine.iloc[testIndex]
-    trainSetAll=allCombine.iloc[trainIndex]
+    testSet=mlSet.iloc[testIndex]
+    trainSetAll=mlSet.iloc[trainIndex]
     trainSetAll.to_csv(ml_outfolder+'/trainSetAll.csv')
     trainSet,validSet=splitTrainValid(trainSetAll,0,5)
 
@@ -179,17 +201,17 @@ def machine_learning(args):
     validSet=pd.DataFrame(validSet,columns=trainSetAll.columns)
 
  
-    print("ALL after preprocess:",allCombine.shape)
+    print("ALL after preprocess:",mlSet.shape)
     print("trainAll:",trainSetAll.shape)
     print("--trainSet:",trainSet.shape)
     print("--validSet:",validSet.shape)
     print("testSet:",testSet.shape)
-    
+    print("leaveSet:",leaveSet.shape)
 
     trainSet.to_csv(ml_outfolder+"/trainSet.csv")
     validSet.to_csv(ml_outfolder+"/validSet.csv")
     testSet.to_csv(ml_outfolder+"/testSet.csv")
-
+    leaveSet.to_csv(ml_outfolder+"/leaveSet.csv")
     
 
     #train each model:
@@ -207,6 +229,7 @@ def machine_learning(args):
     trainResult=trainSet.copy()
     validResult=validSet.copy()
     testResult=testSet.copy()
+    leaveResult=leaveSet.copy()
 
     for alg in algorithmNames:
         trainSet_X=trainSet.loc[:,featureList].values
@@ -215,6 +238,8 @@ def machine_learning(args):
         validSet_y=validSet["runtime_"+alg].values
         testSet_X=testSet.loc[:,featureList].values
         testSet_y=testSet["runtime_"+alg].values
+        leaveSet_X=leaveSet.loc[:,featureList].values
+        leaveSet_y=leaveSet["runtime_"+alg].values
 
         bestDepthDT=0
         bestDepthRF=0
@@ -281,6 +306,9 @@ def machine_learning(args):
         validResult["DT_"+alg+"_pred"]=y_
         y_=dtModel.predict(testSet_X)
         testResult["DT_"+alg+"_pred"]=y_
+        y_=dtModel.predict(leaveSet_X)
+        leaveResult["DT_"+alg+"_pred"]=y_
+        
 
         ##########
         rfModel=RandomForestRegressor(max_depth=bestDepthRF)
@@ -291,7 +319,8 @@ def machine_learning(args):
         validResult["RF_"+alg+"_pred"]=y_
         y_=rfModel.predict(testSet_X)
         testResult["RF_"+alg+"_pred"]=y_
-
+        y_=rfModel.predict(leaveSet_X)
+        leaveResult["RF_"+alg+"_pred"]=y_
         #########
         kNeigh =KNeighborsRegressor(n_neighbors=bestKNeib)
         kNeigh= kNeigh.fit(trainSet_X, trainSet_y)
@@ -301,7 +330,8 @@ def machine_learning(args):
         validResult["kNN_"+alg+"_pred"]=y_
         y_=kNeigh.predict(testSet_X)
         testResult["kNN_"+alg+"_pred"]=y_
-
+        y_=kNeigh.predict(leaveSet_X)
+        leaveResult["kNN_"+alg+"_pred"]=y_
     #analysis
     ##solved percent and runtime of
     ##per algorithm, oracle and ES
@@ -355,6 +385,7 @@ def machine_learning(args):
         modelResults["2nd_time"]=secondruntime
         #printSvdPercAvgTime("2nd",secondruntime)
 
+        '''
         #the third predicted is the i[2]:(min_runtime, its_name)
         thirdpredname=[i[2][1] for i in predictedList]
         thirdname=["runtime_"+i.split("_")[1] for i in thirdpredname]
@@ -362,7 +393,7 @@ def machine_learning(args):
         modelResults["3rd_ham"]=thirdname
         modelResults["3rd_time"]=thirdruntime
         #printSvdPercAvgTime("3rd",thirdruntime)
-
+        '''
         #modelResults.to_csv(("resultAnalysis/training_result_analysis_"+mName+".csv"))
     print("\n")
     '''    
@@ -443,14 +474,14 @@ def machine_learning(args):
         modelResults["2nd_ham"]=secondname
         modelResults["2nd_time"]=secondruntime
         #printSvdPercAvgTime("2nd",secondruntime)
-
+        '''
         thirdpredname=[i[2][1] for i in predictedList]
         thirdname=["runtime_"+i.split("_")[1] for i in thirdpredname]
         thirdruntime=[modelResults[thirdname[i]].values[i]  for i in range(len(modelResults))]
         modelResults["3rd_ham"]=thirdname
         modelResults["3rd_time"]=thirdruntime
         #printSvdPercAvgTime("3rd",thirdruntime)
-
+        '''
         #modelResults.to_csv(("resultAnalysis/testing_result_analysis_"+mName+".csv"))
 
     testResultSaving=sorted(testResultSaving)[-1]
@@ -459,15 +490,56 @@ def machine_learning(args):
     result_tm=str(testResultSaving[1])
     #print(testResultSaving[-1])
     
-    if not os.path.exists('evaluation'):
-        os.system('mkdir evaluation')
-    os.system('rm evaluation/result.csv')
-    with open('evaluation/result.csv','w') as f:
-        f.write('method,solving,time\n')
-        f.write(method+','+result_sol+','+result_tm+'\n')
+
+    with open('evaluation/result.csv','a') as f:
+        f.write(method+'_'+ml_group+','+result_sol+','+result_tm+'\n')
 
     print('\n')
+  
+    print("leaveSet")
+    drawLine()
+    print("Indivadual encoding and Oracle performance: ")
+    for alg in runtimeIndex:
+        sv_percent,sv_time=printSvdPercAvgTime(alg+"",leaveResult[alg],TIME_MAX)
+        write2eva2(alg+ml_group,sv_percent,sv_time)
+    sv_percent,sv_time=printSvdPercAvgTime("oracle_portfolio",leaveResult.Oracle_value.values,TIME_MAX)
+    write2eva2("oracle_portfolio"+ml_group,sv_percent,sv_time)
+    print("\nEncoding selection performance: ")
+    for mName in "DT,RF,kNN".split(","):
+        print(mName)
+        encRuntime=[i for i in leaveResult.columns if "runtime" in i]
+        modelRuntime=[i for i in leaveResult.columns if mName in i]
+        modelResults=leaveResult[encRuntime+modelRuntime].copy()
 
+        modelResultsCopy=modelResults[modelRuntime].copy()
+        for i in modelResultsCopy.columns.values:
+            modelResultsCopy[i]=[(j,i)for j in modelResultsCopy[i]]
+        predictedList=modelResultsCopy.values
+        predictedList.sort()
+
+        bestpredname=[i[0][1] for i in predictedList]
+        bestname=["runtime_"+i.split("_")[1] for i in bestpredname]
+        bestruntime=[modelResults[bestname[i]].values[i]  for i in range(len(modelResults))]
+        modelResults["1st_ham"]=bestname
+        modelResults["1st_time"]=bestruntime
+        sv_percent,sv_time=printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
+        write2eva2(mName+ml_group,sv_percent,sv_time)
+
+        secondpredname=[i[1][1] for i in predictedList]
+        secondname=["runtime_"+i.split("_")[1] for i in secondpredname]
+        secondruntime=[modelResults[secondname[i]].values[i]  for i in range(len(modelResults))]
+        modelResults["2nd_ham"]=secondname
+        modelResults["2nd_time"]=secondruntime
+        #printSvdPercAvgTime("2nd",secondruntime)
+        '''
+        thirdpredname=[i[2][1] for i in predictedList]
+        thirdname=["runtime_"+i.split("_")[1] for i in thirdpredname]
+        thirdruntime=[modelResults[thirdname[i]].values[i]  for i in range(len(modelResults))]
+        modelResults["3rd_ham"]=thirdname
+        modelResults["3rd_time"]=thirdruntime
+        #printSvdPercAvgTime("3rd",thirdruntime)
+        '''
+        #modelResults.to_csv(("resultAnalysis/leaveing_result_analysis_"+mName+".csv"))
 
 
 
@@ -480,5 +552,27 @@ if __name__ == "__main__":
     define_args(parser)
     args = parser.parse_args()
 
-    machine_learning(args)
+
+    ml_outfolder=args.ml_models_folder[0]
+    ml_hyperfolder=args.ml_hyper_folder[0]
+
+    checkMakeFolder(ml_hyperfolder)
+    cleanFolder(ml_hyperfolder)
+    checkMakeFolder(ml_outfolder)
+    cleanFolder(ml_outfolder)
+
+    #evaluating
+    if not os.path.exists('evaluation'):
+        os.system('mkdir evaluation')
+    os.system('rm evaluation/*')
+    with open('evaluation/result.csv','w') as f:
+        f.write('method,solving,time\n')    
+
+    with open('evaluation/result2.csv','w') as f:
+        f.write('evaluation\n')
+
+    feature_folder=args.feature_folder[0]
+    feature_groups=os.listdir(feature_folder)
+    for ml_group in feature_groups:
+        machine_learning(args,ml_group)
     

@@ -81,39 +81,59 @@ if __name__ == "__main__":
     define_args(parser)
     args = parser.parse_args()
 
-    performance_folder=args.performance_folder[0]
+    performance_folder_input=args.performance_folder[0]
     cutoff=args.cutoff[0]
     schedule_out_folder=args.schedule_output[0]
 
-    df_file=os.listdir(performance_folder)[0]
-    df_file=performance_folder+'/'+df_file
-    df=pd.read_csv(df_file)
-    df=df.set_index(df.columns[0])
-    #print(df.shape)
-    train_df=pd.read_csv('ml_models/trainSetAll.csv')
-    train_df=train_df.set_index(train_df.columns[0])
-    df=df.loc[train_df.index]
-    #print(df.shape)
-    #train
-    col_name1,col_name_2,t_given1,t_given2=build(cutoff,df)
-    #test
+    performance_folders=os.listdir(performance_folder_input)
+    allresults=[]
+    for performance_folder_group in performance_folders:
+        performance_folder=performance_folder_input+'/'+performance_folder_group
+        df_file=os.listdir(performance_folder)[0]
+        df_file=performance_folder+'/'+df_file
+        df=pd.read_csv(df_file)
+        df=df.set_index(df.columns[0])
+        #print(df.shape)
+        train_df=pd.read_csv('ml_models/'+performance_folder_group+'/trainSetAll.csv')
+        train_df=train_df.set_index(train_df.columns[0])
+        df=df.loc[train_df.index]
+        #print(df.shape)
+        #train
+        col_name1,col_name_2,t_given1,t_given2=build(cutoff,df)
+        #test
 
-    df=pd.read_csv(df_file)
-    df=df.set_index(df.columns[0])
-    test_df=pd.read_csv('ml_models/testSet.csv')
-    test_df=test_df.set_index(test_df.columns[0])
-    df=df.loc[test_df.index]
-    s,t=get_seq_diff_time(df,col_name1,col_name_2,t_given1,t_given2,int(cutoff))
+        df=pd.read_csv(df_file)
+        df=df.set_index(df.columns[0])
+        test_df=pd.read_csv('ml_models/'+performance_folder_group+'/testSet.csv')
+        test_df=test_df.set_index(test_df.columns[0])
+        df=df.loc[test_df.index]
+        s,t=get_seq_diff_time(df,col_name1,col_name_2,t_given1,t_given2,int(cutoff))
+        allresults.append((round(s,2),round(t,2),performance_folder_group,col_name1,col_name_2,t_given1,t_given2,int(cutoff)))
+        schedule_this_time='-'.join([col_name1,col_name_2,str(t_given1),str(t_given2)])
+        with open('evaluation/result.csv','a') as f:
+            f.write('schedule_'+performance_folder_group+'_'+schedule_this_time+','+str(round(s,2))+','+str(round(t,2))+'\n')
 
-    with open('evaluation/result.csv','a') as f:
-        f.write('schedule,'+str(round(s,2))+','+str(round(t,2))+'\n')
+        #leave out
 
+        df=pd.read_csv(df_file)
+        df=df.set_index(df.columns[0])
+        leave_df=pd.read_csv('ml_models/'+performance_folder_group+'/leaveSet.csv')
+        leave_df=leave_df.set_index(leave_df.columns[0])
+        df=df.loc[leave_df.index]
+        s,t=get_seq_diff_time(df,col_name1,col_name_2,t_given1,t_given2,int(cutoff))
+        allresults.append((round(s,2),round(t,2),performance_folder_group,col_name1,col_name_2,t_given1,t_given2,int(cutoff)))
+        schedule_this_time='-'.join([col_name1,col_name_2,str(t_given1),str(t_given2)])
+        with open('evaluation/result2.csv','a') as f:
+            f.write('schedule_'+performance_folder_group+'_'+schedule_this_time+','+str(round(s,2))+','+str(round(t,2))+'\n')
+    
+    allresults=sorted(allresults)
+    bestresult=allresults[-1]
     if not os.path.exists(schedule_out_folder):
         os.system('mkdir '+schedule_out_folder)
     
     with open(schedule_out_folder+'/'+'schedule.csv','w') as f:
-        f.write('enc1,enc2,t_given1,t_given2\n')
-        f.write(str(col_name1)+','+str(col_name_2)+','+str(t_given1)+','+str(t_given2)+'\n')
+        f.write('group,enc1,enc2,t_given1,t_given2\n')
+        f.write(performance_folder_group+','+str(col_name1)+','+str(col_name_2)+','+str(t_given1)+','+str(t_given2)+'\n')
 
 
 

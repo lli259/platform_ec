@@ -5,7 +5,7 @@ import pandas as pd
 
 def define_args(arg_parser):
 
-    arg_parser.add_argument('--num_candidate', nargs='*', default=['4'], help='Gringo input files')
+    #arg_parser.add_argument('--num_candidate', nargs='*', default=['4'], help='Gringo input files')
     arg_parser.add_argument('--performance_data', nargs='*', default=['performance'], help='Gringo input files')
     arg_parser.add_argument('--cutoff', nargs='*', default=['200'], help='Gringo input files')
     arg_parser.add_argument('--selected_encodings', nargs='*', default=['selected_encodings'], help='Gringo input files')    
@@ -19,12 +19,15 @@ if __name__ == "__main__":
 
 
 
-    n_candidate=int(args.num_candidate[0])
     t_cutoff=int(args.cutoff[0])
     data_folder=args.performance_data[0]
     enc_out_folder=args.selected_encodings[0]
     enc_folder=args.encodings[0]
 
+    allcandidate=len(os.listdir(enc_folder))
+
+    n_candidate_min=min(3,allcandidate)
+    n_candidate_max=min(6,allcandidate)
 
     data_f=data_folder+'/'+os.listdir(data_folder)[0]
     df=pd.read_csv(data_f)
@@ -167,29 +170,49 @@ if __name__ == "__main__":
 
     rank_tuple=sorted(rank_tuple,reverse=True)
 
-    top_col=[]
-    for v in rank_tuple[:n_candidate]:
-        top_col.append(v[1])
 
 
-    df=df[top_col]
+
+
+    #save to folder
 
     if not os.path.exists(data_folder+"_selected"):
         os.system('mkdir '+data_folder+"_selected")
-
-    df.to_csv(data_folder+"_selected/performance_selected.csv")
-
-    print('performance selection finished.')
-
-    #select encodings
+    else:
+        os.system('rm -r '+data_folder+"_selected/*")      
 
     #enc_out_folder=enc_folder+'_selected'
     if not os.path.exists(enc_out_folder):
-        os.system('mkdir '+enc_out_folder)    
+        os.system('mkdir '+enc_out_folder)
     else:
-        os.system('rm '+enc_out_folder+'/*')
-    
-    for enc_name in top_col:
-        os.system('cp '+enc_folder+'/'+enc_name+'.lp '+enc_out_folder+'/')
-    
-    print('encodings candidate generated.')
+        os.system('rm -r '+enc_out_folder)    
+
+    for index_candidate,n_candidate in enumerate(range(n_candidate_min,n_candidate_max+1)):
+        top_col=[]
+        for v in rank_tuple[:n_candidate]:
+            top_col.append(v[1])
+
+        dfcp=df.copy()
+        dfcp=dfcp[top_col]
+
+
+        if not os.path.exists(data_folder+"_selected/group"+str(index_candidate+1)):
+            os.makedirs(data_folder+"_selected/group"+str(index_candidate+1))
+            print('mkdir '+data_folder+"_selected/group"+str(index_candidate+1))
+        else:
+            print('error mkdir '+data_folder+"_selected/group"+str(index_candidate+1))
+                
+        dfcp.to_csv(data_folder+"_selected/group"+str(index_candidate+1)+"/performance_selected.csv")
+
+        print('performance selection finished.',"group"+str(index_candidate+1),n_candidate,'encodings')
+
+        #select encodings
+        if not os.path.exists(enc_out_folder+'/group'+str(index_candidate+1)):
+            os.makedirs(enc_out_folder+'/group'+str(index_candidate+1))  
+        else:
+            os.system('rm '+enc_out_folder+'/group'+str(index_candidate+1)+'/*')
+        
+        for enc_name in top_col:
+            os.system('cp '+enc_folder+'/'+enc_name+'.lp '+enc_out_folder+'/group'+str(index_candidate+1)+'/')
+        
+        print('encodings candidate generated.',"group"+str(index_candidate+1),n_candidate,'encodings')

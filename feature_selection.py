@@ -16,7 +16,7 @@ def define_args(arg_parser):
     
 
 
-def get_most_meaningful(feature_data,performance_data):
+def get_most_meaningful(feature_data,performance_data,number_features):
     alldata=feature_data.join(performance_data)
 
     cols=alldata.columns.values
@@ -26,9 +26,6 @@ def get_most_meaningful(feature_data,performance_data):
     X_Train=alldata.loc[:,cols[:-1]]
     Y_Train=alldata.loc[:,cols[-1:]]
     #exit()
-    number_features=min(int(X_Train.shape[1]/3),int(X_Train.shape[0]/10))
-    if number_features <=10:
-        number_features=min(10,X_Train.shape[1])
     #print(X_Train.shape,Y_Train.shape)
     #X_Train = StandardScaler().fit_transform(X_Train)
     #print(X_Train,Y_Train)
@@ -55,11 +52,10 @@ def get_accuracy(most_meaning_f,feature_data,performance_data):
     
     return mean_squared_error(Y_Train,predictionforest)
 
-def save_to_folder(args,selected_features,selected_file):
-    feature_outfolder=args.feature_outfolder[0]
+def save_to_folder(args,selected_features,selected_file,performance_folder_group):
+    feature_outfolder=args.feature_outfolder[0]+'/'+performance_folder_group
     if not os.path.exists(feature_outfolder):
-        os.system('mkdir '+feature_outfolder)
-
+        os.makedirs(feature_outfolder)
 
     feature_folder=args.feature_folder[0]
 
@@ -67,20 +63,21 @@ def save_to_folder(args,selected_features,selected_file):
     feature_data=feature_data.set_index(feature_data.columns[0])    
 
     feature_data_selected=feature_data[selected_features]
+    feature_data_selected.columns=[selected_file.split('.')[0]+'_'+i for i in feature_data_selected.columns]
     feature_data_selected.to_csv(feature_outfolder+'/'+'features_select.csv')
 
 
-def save_to_folder_with_domain(args,selected_features,selected_file,most_meaning_f_dm):
-    feature_outfolder=args.feature_outfolder[0]
-    if not os.path.exists(feature_outfolder):
-        os.system('mkdir '+feature_outfolder)
+def save_to_folder_with_domain(args,selected_features,selected_file,most_meaning_f_dm,performance_folder_group):
+    feature_outfolder=args.feature_outfolder[0]+'/'+performance_folder_group
 
+    if not os.path.exists(feature_outfolder):
+        os.makedirs(feature_outfolder)
 
     feature_folder=args.feature_folder[0]
     feature_data=pd.read_csv(feature_folder+'/'+selected_file)
     feature_data=feature_data.set_index(feature_data.columns[0])    
     feature_data_selected=feature_data[selected_features]
-
+    feature_data_selected.columns=[selected_file.split('.')[0]+'_'+i for i in feature_data_selected.columns]
 
     feature_domain_folder=args.feature_folder_extra[0]
     feature_domain_file=os.listdir(feature_domain_folder)[0]
@@ -92,43 +89,78 @@ def save_to_folder_with_domain(args,selected_features,selected_file,most_meaning
     feature_data_selected=feature_data_selected.dropna()
     feature_data_selected.to_csv(feature_outfolder+'/'+'features_select.csv')
 
-def select_f(args):
+def select_f(args,performance_folder_group):
     
     #clasp features
     feature_folder=args.feature_folder[0]
     performance_folder=args.performance_folder[0]
 
     feature_all_enc=os.listdir(feature_folder)
-    performance_file=performance_folder+'/'+os.listdir(performance_folder)[0]
 
-    performance_data=pd.read_csv(performance_file)
+    performance_file_name=os.listdir(performance_folder+'/'+performance_folder_group)[0]
+
+    performance_data=pd.read_csv(performance_folder+'/'+performance_folder_group+'/'+performance_file_name)
     performance_data=performance_data.set_index(performance_data.columns[0])
+    all_enc_names=performance_data.columns.values
     performance_data=performance_data[performance_data.columns[0]]
+
 
     allscore=[]
     for f_each_enc in feature_all_enc:
-        feature_data=pd.read_csv(feature_folder+'/'+f_each_enc)
-        feature_data=feature_data.set_index(feature_data.columns[0])
-        most_meaning_f=get_most_meaningful(feature_data,performance_data)
-        score=get_accuracy(most_meaning_f,feature_data,performance_data)
-        allscore.append((score,most_meaning_f,f_each_enc))
-    allscore=sorted(allscore)
+        enc_name=f_each_enc.split('_')[0]
+        if enc_name in all_enc_names:
+            feature_data=pd.read_csv(feature_folder+'/'+f_each_enc)
+            feature_data=feature_data.set_index(feature_data.columns[0])
+            feature_selected_num_min=feature_selected_num_max=0
 
-    selected_features=allscore[-1][1]
-    selected_file=allscore[-1][2]
+            all_diff_features=[]
+            if len(feature_data.columns)<20:
+                feature_selected_num_min=int(len(feature_data.columns)*0.7)
+                feature_selected_num_max=int(len(feature_data.columns)*0.9)
+            else:
+                feature_selected_num_min=int(len(feature_data.columns)*0.4)
+                feature_selected_num_max=int(len(feature_data.columns)*0.7)            
+            for diff_f_num in range(feature_selected_num_min,feature_selected_num_max+1):
+
+                most_meaning_f=get_most_meaningful(feature_data,performance_data,diff_f_num)
+                score=get_accuracy(most_meaning_f,feature_data,performance_data)
+                all_diff_features.append((score,most_meaning_f,f_each_enc))
+            all_diff_features=sorted(all_diff_features)
+            best_score=all_diff_features[0]
+            allscore.append(best_score)
+
+    allscore=sorted(allscore)
+    selected_features=allscore[0][1]
+    print(selected_features,allscore)
+    selected_file=allscore[0][2]
 
     #domain features
     feature_domain_folder=args.feature_folder_extra[0]
     feature_domain_file=os.listdir(feature_domain_folder)[0]
     if feature_domain_file ==None:
-        save_to_folder(args,selected_features,selected_file)
+        save_to_folder(args,selected_features,selected_file,performance_folder_group)
     else:
         feature_domain=pd.read_csv(feature_domain_folder+'/'+feature_domain_file)
         feature_domain=feature_domain.set_index(feature_domain.columns[0])
         feature_domain=feature_domain.dropna()
         #print('domain feature selection...',feature_domain.shape)
-        most_meaning_f_dm=get_most_meaningful(feature_domain,performance_data)
-        save_to_folder_with_domain(args,selected_features,selected_file,most_meaning_f_dm)
+
+        all_diff_features=[]
+        if len(feature_domain.columns)<20:
+            feature_selected_num_min=int(len(feature_domain.columns)*0.7)
+            feature_selected_num_max=int(len(feature_domain.columns)*0.9)
+        else:
+            feature_selected_num_min=int(len(feature_domain.columns)*0.4)
+            feature_selected_num_max=int(len(feature_domain.columns)*0.7)            
+        for diff_f_num in range(feature_selected_num_min,feature_selected_num_max+1):
+            most_meaning_f_dm=get_most_meaningful(feature_domain,performance_data,diff_f_num)
+            score=get_accuracy(most_meaning_f_dm,feature_domain,performance_data)
+            all_diff_features.append((score,most_meaning_f_dm))
+
+        all_diff_features=sorted(all_diff_features)
+        best_score=all_diff_features[0]       
+        most_meaning_f_dm=best_score[1]
+        save_to_folder_with_domain(args,selected_features,selected_file,most_meaning_f_dm,performance_folder_group)
 
 
 if __name__ == "__main__":
@@ -136,7 +168,16 @@ if __name__ == "__main__":
     define_args(parser)
     args = parser.parse_args()
 
-    select_f(args)
+    feature_outfolder=args.feature_outfolder[0]
+    if not os.path.exists(feature_outfolder):
+        os.system('mkdir '+feature_outfolder)
+    else:
+        os.system('rm -r '+feature_outfolder+'/*')
+        
+    performance_folder=args.performance_folder[0]
+    performance_folder_groups=os.listdir(performance_folder)
+    for performance_folder_group in performance_folder_groups:
+        select_f(args,performance_folder_group)
 
     
     
