@@ -114,9 +114,17 @@ group1
 group2
 group3
 group4
-...
 
+python train.py -p 3
+ls encodings_selected/group1
+ls encodings_selected/group2
+ls encodings_selected/group3
+ls encodings_selected/group4
 
+cat performance_selected/group1/performance_selected.csv | head -5
+cat performance_selected/group2/performance_selected.csv | head -5
+cat performance_selected/group3/performance_selected.csv | head -5
+cat performance_selected/group4/performance_selected.csv | head -5
 
 4.Feature extraction
 python train.py -p 4
@@ -142,13 +150,17 @@ cat features_selected/features_select.csv | head -5
 
 
 --updated:
-will generate extract features based on each group and select the number of features from 0.4-0.8
+will generate extract features based on each group and select most valuable features from 0.3*all features to 0.8*all features
 group1
 group2
 group3
 group4
-...
 
+python train.py -p 5
+cat features_selected/group1/features_select.csv | head -5
+cat features_selected/group2/features_select.csv | head -5
+cat features_selected/group3/features_select.csv | head -5
+cat features_selected/group4/features_select.csv | head -5
 
 6.Model building
 python train.py -p 6
@@ -166,8 +178,12 @@ group1
 group2
 group3
 group4
-...
 
+python train.py -p 6
+ls ml_hyper/group1
+ls ml_hyper/group2
+ls ml_hyper/group3
+python train.py -p 7
 7.Schedule building
 python train.py -p 7
 
@@ -180,8 +196,10 @@ group1
 group2
 group3
 group4
-...
 
+python train.py -p 7
+ls schedule/group1
+ls schedule/group2
 
 8.Interleaving schedule building
 python train.py -p 8
@@ -196,13 +214,26 @@ group1
 group2
 group3
 group4
-...
+
+python train.py -p 7
+ls interleave/group1
+ls interleave/group2
 
 9.Solution estimation
 python train.py -p 9
 
 default input: interleave, schedule, ml_models, test_data
 default output: solution
+
+--updated:
+will generate best solution within each group
+group1
+group2
+group3
+group4
+
+and evaluate using leave-out dataset to check the performance of the best solution above.
+
 
 10.New instance solving
 python solve.py
