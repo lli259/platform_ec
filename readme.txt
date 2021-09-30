@@ -108,6 +108,16 @@ cat performance_selected/
 ls encodings_selected
 
 
+--updated:
+will generate many folders in ouput folders of different sizes: min(3,len(encodings)) to min(6, encodings))
+group1
+group2
+group3
+group4
+...
+
+
+
 4.Feature extraction
 python train.py -p 4
 
@@ -130,6 +140,16 @@ cat performance_selected/performance_selected.csv | head -3
 python train.py -p 5
 cat features_selected/features_select.csv | head -5
 
+
+--updated:
+will generate extract features based on each group and select the number of features from 0.4-0.8
+group1
+group2
+group3
+group4
+...
+
+
 6.Model building
 python train.py -p 6
 
@@ -140,13 +160,27 @@ cat features_selected/
 cat performance_selected/
 python train.py -p 6
 
-
+--updated:
+will generate build models based on each group
+group1
+group2
+group3
+group4
+...
 
 7.Schedule building
 python train.py -p 7
 
 default input: performance_selected
 default output: schedule
+
+--updated:
+will generate build schedule based on each group
+group1
+group2
+group3
+group4
+...
 
 
 8.Interleaving schedule building
@@ -155,6 +189,14 @@ python train.py -p 8
 default input: performance_selected
 default output: interleave
 
+
+--updated:
+will generate build schedule based on each group
+group1
+group2
+group3
+group4
+...
 
 9.Solution estimation
 python train.py -p 9
