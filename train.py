@@ -6,7 +6,7 @@ Platform Learning
 
 '''
 Encoding_rewrite='1'
-#Performance_gen='2'
+Performance_gen='2'
 Encoding_candidate_gen='3'
 Feature_extraction='4'
 Feature_selection='5'
@@ -56,7 +56,7 @@ if args.p== [0] or Encoding_rewrite in args.p :
             +' --aggregate_form ' + args.rewrite_form[0]
             )
 
-'''
+
 #performance data generation
 if args.p== [0] or Performance_gen in args.p:
     os.system('python performance_gen.py '
@@ -64,7 +64,7 @@ if args.p== [0] or Performance_gen in args.p:
     +' --instances ' +args.instances[0]
     +' --cutoff ' + args.cutoff[0]
     +' --performance_data ' + args.performance_data[0])
-'''
+
 
 
 #Encoding_candidate generation
