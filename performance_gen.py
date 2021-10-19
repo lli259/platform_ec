@@ -43,7 +43,6 @@ def getins(infile):
 def get_solved_instance(outfile):
 
     run_inst=getins(outfile)
-
     if len(run_inst)==0:
         with open(outfile,'w') as f:
             f.write('inst,time,model\n')
@@ -56,15 +55,18 @@ def run_instances_for_enc(enc_name,encodings_folder,instances_names,instances_fo
     #if not, create
     outfile=out_folder+'/'+encoding_name_parser(enc_name)+'_result.csv'
     solved_instances=get_solved_instance(outfile)
+    with open(out_folder+'/cutoff.txt','w') as f:
+        f.write(str(cutoff_t))
+    #save runtime
 
-    print('solving instances using '+enc_name)
+    print('Solving instances using '+enc_name)
 
 
     for instance in instances_names:  
         if not instance.split(".")[0] in solved_instances:
             cmdline='tools/gringo '+encodings_folder+'/'+enc_name +' '+instances_folder+'/'+instance +' | tools/clasp --time-limit=' + str(cutoff_t)
-            print(cmdline)
-            #print('Solving ',instances_folder+'/'+instance)
+            #print(cmdline)
+            print('Solving ', instance)
             process = subprocess.getoutput(cmdline)
             #getoutput
             tm,md=clasp_result_parser(process)
@@ -78,7 +80,7 @@ def combine_result(data_folder1,data_folder2):
 
     output_file='performance.csv'
     allcsv=os.listdir(data_folder1)
-
+    allcsv=[i for i in allcsv if 'result.csv' in i]
     pd1=pd.read_csv(data_folder1+'/'+allcsv[0])
     cols=pd1.columns.values
     pd1=pd1.set_index(cols[0])
@@ -88,19 +90,145 @@ def combine_result(data_folder1,data_folder2):
     pd1.columns=cols
 
     for pointer in range(1,len(allcsv)):
-        print(pointer,len(allcsv))
+        #print(pointer,len(allcsv),data_folder1+'/'+allcsv[pointer])
         pd11=pd.read_csv(data_folder1+'/'+allcsv[pointer])
         cols=pd11.columns.values
         pd11=pd11.set_index(cols[0])
         timecol='time'
+        #print('pd1',pd1)
+        #print('pd11',pd11)
         pd11=pd11[[timecol]]
         cols=[ timecol+'_'+allcsv[pointer].split('_')[0] ]
         pd11.columns=cols
-        
+
         pd1=pd1.join(pd11)
         pd1=pd1.dropna()
     pd1.to_csv(data_folder2+'/'+output_file)
 
+
+#choose len/10, at least 10 or len, at most 50, to test hardness and set cutoff time
+def select_prerun_instance(instances_names):
+    np.random.seed(1)
+    sample_size=int(len(instances_names)/10)
+    if sample_size>50:
+        sample_size=50
+    else:
+        if sample_size<10:
+            sample_size=min(len(instances_names),10)
+    selected_enc=np.random.choice(instances_names,sample_size,replace=False)
+
+    return selected_enc
+
+def save_cutoff(t_cutoff):
+    if not os.path.exists('cutoff'):
+        os.mkdir('cutoff')    
+    os.system('rm cutoff/*')  
+
+    with open('cutoff/cutoff.txt','w') as f:
+        f.write(str(t_cutoff))
+
+def easy_hard_to(t,cutoff):
+    if t<cutoff/7:
+        return 'easy'
+    if t>cutoff-1:
+        return 'timeout'
+    return 'hard'
+
+def hardness_for_list(l):
+    #['hard','easy','timeout']
+    hard=easy=timeout=0
+    for i in range(0,len(l)):
+        if i=='hard':
+            hard+=1
+        if i=='easy':
+            easy+=1
+        if i=='timeout':
+            timeout+=1
+    if hard> len(l)*0.3:
+        return 'hard'
+    if timeout> len(l)*0.3:
+        return 'timeout'
+    if easy> len(l)*0.3:
+        return 'easy'
+    return 'hard'
+
+def get_hardness(data_final,t_cutoff):
+    in_file=data_final+'/performance.csv'
+    df=pd.read_csv(in_file)
+    cols=df.columns.values
+    df=df.set_index(cols[0])
+    cols=df.columns.values
+    hardness_each_enc=[]
+    for c in cols:
+        df_col=df[c].values
+        hardness_this_list=[ easy_hard_to(item,t_cutoff) for item in df_col]
+        hardness_this=hardness_for_list(hardness_this_list)
+        hardness_each_enc.append(hardness_this)
+    return hardness_each_enc
+
+def get_cutoff(pre_run_data_final):
+    if not os.path.exists(pre_run_data_final+'/cutoff.txt'):
+        return '0'
+    with open(pre_run_data_final+'/cutoff.txt','r') as f:
+        ret=f.readline()
+        #print(ret)
+        return ret
+
+def delete_and_save(folder):
+    copy_folder = initial= folder
+    for i in range(1,20):
+        copy_folder= initial+ str(i) 
+        if not os.path.exists(copy_folder):
+            os.mkdir(copy_folder)
+            break
+    os.system('mv '+folder+'/* '+copy_folder+'/')
+
+
+def test_hardness_instances(encodings_folder,instances_folder,selected_ins,pre_run_data_final,pre_run_result_folder,t_cutoff):
+
+    encodings_names=os.listdir(encodings_folder)
+    instances_names=selected_ins
+
+    hardness=''
+
+    for pre_run in range(0,3): #timeoff.2timeoff.4timeoff
+        print('\nSolving prerun instances...round ',pre_run,':', t_cutoff,'s')
+
+        #delete history
+        if os.listdir(pre_run_result_folder)!=[] or os.listdir(pre_run_data_final)!=[]:
+            delete_and_save(pre_run_result_folder)
+            delete_and_save(pre_run_data_final)
+            #print('old file detected')
+
+        
+        '''
+        if not os.path.exists(pre_run_result_folder+'/cutoff.txt'):
+            os.system('rm '+pre_run_result_folder+'/*')
+            os.system('rm '+pre_run_data_final+'/*')
+        else:
+            if int(t_cutoff)!= int(get_cutoff(pre_run_result_folder)):
+                os.system('rm '+pre_run_result_folder+'/*')
+                os.system('rm '+pre_run_data_final+'/*')
+        '''
+        for enc in encodings_names:
+            run_instances_for_enc(enc,encodings_folder,instances_names,instances_folder,pre_run_result_folder,t_cutoff)
+        
+        #combine results
+        combine_result(pre_run_result_folder,pre_run_data_final)
+
+
+        hardness_list=get_hardness(pre_run_data_final,t_cutoff)
+        print(hardness_list)
+        hardness=hardness_for_list(hardness_list)
+        if hardness=='hard':
+            save_cutoff(t_cutoff)
+            break
+        if hardness=='easy':
+            break
+        if hardness=='timeout':
+            t_cutoff=t_cutoff*2
+
+    return hardness,t_cutoff
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -117,19 +245,72 @@ if __name__ == "__main__":
     if not os.path.exists(data_final):
         os.mkdir(data_final)    
 
-
     if not os.path.exists(output_result_folder):
         os.mkdir(output_result_folder)
 
     encodings_names=os.listdir(encodings_folder)
     instances_names=os.listdir(instances_folder)
 
+    #choose len/10, at least 10 or len, at most 100, to test hardness and set cutoff time
+    selected_ins=select_prerun_instance(instances_names)
+    pre_run_data_final=data_final+'_prerun'
+    pre_run_result_folder=pre_run_data_final+'_each_enc'
+    if not os.path.exists(pre_run_data_final):
+        os.mkdir(pre_run_data_final) 
+    if not os.path.exists(pre_run_result_folder):
+        os.mkdir(pre_run_result_folder)     
+    #adjust cutoff time twice according to prerun results
+    hardness,t_cutoff=test_hardness_instances(encodings_folder,instances_folder,selected_ins,pre_run_data_final,pre_run_result_folder,t_cutoff)
+
+    if hardness=='timeout':
+        print('\nExit! Instances are too hard to solve in ',t_cutoff)
+        exit()
+    if hardness=='easy':
+        print('\nExit! Instances are too easy to solve in ',t_cutoff)
+        exit()
+    
+    #append pre_run to existing final results
+    # if existing final results
+    if int(t_cutoff)== int(get_cutoff(output_result_folder)):
+        #combine
+        #print('combine')
+        for enc_name in encodings_names:
+            if os.path.exists(output_result_folder+'/'+encoding_name_parser(enc_name)+'_result.csv'):
+                df1=pd.read_csv(output_result_folder+'/'+encoding_name_parser(enc_name)+'_result.csv')
+                df2=pd.read_csv(pre_run_result_folder+'/'+encoding_name_parser(enc_name)+'_result.csv')
+                df1=df1.set_index(df1.columns.values[0])
+                df2=df2.set_index(df2.columns.values[0])
+                df1=pd.concat([df1, df2], axis= 0)
+                df1 = df1[~df1.index.duplicated(keep='last')]
+                df1.to_csv(output_result_folder+'/'+encoding_name_parser(enc_name)+'_result.csv')
+
+        if os.path.exists(data_final+'/performance.csv'):
+            df1=pd.read_csv(data_final+'/performance.csv')
+            df2=pd.read_csv(pre_run_data_final+'/performance.csv')
+            df1=df1.set_index(df1.columns.values[0])
+            df2=df2.set_index(df2.columns.values[0])
+            df1=pd.concat([df1, df2], axis= 0)
+            df1 = df1[~df1.index.duplicated(keep='last')]
+            df1.to_csv(data_final+'/performance.csv')
+    else:
+        #if not existing final results
+        if os.listdir(output_result_folder)!=[] or os.listdir(data_final)!=[]:
+            delete_and_save(output_result_folder)
+            delete_and_save(data_final)
+        #print('--------1',pre_run_data_final)
+        for enc_name in encodings_names:
+            df2=pd.read_csv(pre_run_result_folder+'/'+encoding_name_parser(enc_name)+'_result.csv')
+            df2.to_csv(output_result_folder+'/'+encoding_name_parser(enc_name)+'_result.csv',index=False) 
+        #print('--------2',pre_run_data_final)
+        df2=pd.read_csv(pre_run_data_final+'/performance.csv')           
+        df2.to_csv(data_final+'/performance.csv',index=False)
+
+    print('\nSolving remaining instances...',t_cutoff,'s')
+    #run all instances
     for enc in encodings_names:
         run_instances_for_enc(enc,encodings_folder,instances_names,instances_folder,output_result_folder,t_cutoff)
-
-    #analysis_result()
-    #time increase according to percentage solved
-
-
     #combine results
     combine_result(output_result_folder,data_final)
+
+    
+

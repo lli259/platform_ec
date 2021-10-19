@@ -80,7 +80,7 @@ if args.p== [0] or Encoding_candidate_gen in args.p:
 if args.p== [0] or Feature_extraction in args.p:
     instances_folder=args.instances[0]
     encodings_folder=args.selected_encodings[0]
-    os.system('python2 feature_extract.py --instances_folder '+ instances_folder
+    os.system('python feature_extract.py --instances_folder '+ instances_folder
     +' --encodings_folder ' + encodings_folder
     )
 
