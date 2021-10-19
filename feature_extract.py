@@ -3,7 +3,7 @@ import argparse,os
 import numpy as np
 from collections import Counter
 import pandas as pd
-import commands
+import subprocess
 
 def define_args(arg_parser):
 
@@ -11,7 +11,8 @@ def define_args(arg_parser):
     arg_parser.add_argument('--instances_folder', nargs='*', default=['instances'], help='Gringo input files')
     arg_parser.add_argument('--feature_data', nargs='*', default=['features'], help='Gringo input files')
     
-
+def encoding_name_parser(enc_name):
+    return enc_name.split('/')[1].split('.')[0].split('_')[0]
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -55,24 +56,38 @@ if __name__ == "__main__":
         "Running_Avg_Conflictlevel,Running_Avg_LBD,"+dynamic_f2
     
     for enc in encodings:
+        print('Feature Extractor Running for',enc)
+        enc=encodings_folder+'/'+enc
+        if not os.path.exists(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv"):
+            with open(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv","a") as f:
+                f.write("instance_id,"+feature_names+"\n")
+
+        run_inst_df=pd.read_csv(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv")
+        run_inst=run_inst_df['instance_id'].values
+
         for ins in instances:
-            cmd_time="./claspre/gringo "+enc+" "+ins+" | ./claspre/claspre200"
-            result_time=commands.getoutput(cmd_time)
-            result_time=result_time.split("\n")
+            if not ins in run_inst:
+                print('Extracting ',ins)
+                ins=instances_folder+'/'+ins
+                cmd_time="./tools/claspre/gringo "+enc+" "+ins+" | ./tools/claspre/claspre"
+                result_time=subprocess.getoutput(cmd_time)
+                result_time=result_time.split("\n")
 
-            if len(result_time)<10:
-                #fail
-                print (ins.split("/")[1])
-            
-            else:
-                f_values=[]
-                for i in result_time[2:]:
-                    if "[" in i and "]" in i:
-                        feat_value_tem=""
-                        for ch in i:
-                            if ch in "0123456789.":
-                                feat_value_tem+=ch
-                        f_values.append(feat_value_tem)
+                if len(result_time)<10:
+                    #fail
+                    print (ins.split("/")[1])
+                    print ('Fail')
+                else:
+                    
+                    f_values=[]
+                    for i in result_time[2:]:
+                        if "[" in i and "]" in i:
+                            feat_value_tem=""
+                            for ch in i:
+                                if ch in "0123456789.":
+                                    feat_value_tem+=ch
+                            f_values.append(feat_value_tem)
 
-                with open(features_folder+"/"+enc.split("/")[1].split(".lp")[0]+"_feature.csv","a") as f:
-                    f.write(ins.split("/")[1]+","+",".join(f_values)+"\n")
+                    with open(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv","a") as f:
+                        f.write(ins.split("/")[1]+","+",".join(f_values)+"\n")
+                    print ('Done')
