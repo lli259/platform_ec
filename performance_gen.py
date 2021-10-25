@@ -3,6 +3,8 @@ import numpy as np
 from collections import Counter
 import pandas as pd
 import subprocess
+from multiprocessing import Process
+from multiprocessing import Semaphore
 
 def define_args(arg_parser):
 
@@ -48,33 +50,57 @@ def get_solved_instance(outfile):
             f.write('inst,time,model\n')
     return run_inst
 
-def run_instances_for_enc(enc_name,encodings_folder,instances_names,instances_folder,out_folder,cutoff_t):
+
+def run_multiprocess(enc_name,encodings_folder,instances_names,instances_folder,out_folder,cutoff_t,process_name,sema):
+
+    #print('process {} running on '.format(process_name))
 
     #check if enc_result.csv exist, 
     #if exists, get instances
     #if not, create
     outfile=out_folder+'/'+encoding_name_parser(enc_name)+'_result.csv'
     solved_instances=get_solved_instance(outfile)
-    with open(out_folder+'/cutoff.txt','w') as f:
-        f.write(str(cutoff_t))
+
     #save runtime
 
-    print('Solving instances using '+enc_name)
+    #print('Solving instances using '+enc_name)
 
 
     for instance in instances_names:  
-        if not instance.split(".")[0] in solved_instances:
+        if not instance.split(".")[0] in solved_instances:         
+            
             cmdline='tools/gringo '+encodings_folder+'/'+enc_name +' '+instances_folder+'/'+instance +' | tools/clasp --time-limit=' + str(cutoff_t)
             #print(cmdline)
-            print('Solving ', instance)
-            process = subprocess.getoutput(cmdline)
+            print('Solving ', enc_name,instance,'using process ',process_name)
+            process_ret = subprocess.getoutput(cmdline)
             #getoutput
-            tm,md=clasp_result_parser(process)
-            print(tm,md)
+            tm,md=clasp_result_parser(process_ret)
+            print('Result ',enc_name,instance,tm,md)
             with open (outfile,'a') as f:
-                f.write(str(instance).split('.')[0]+','+str(tm)+','+str(md)+'\n')            
+                f.write(str(instance).split('.')[0]+','+str(tm)+','+str(md)+'\n')   
+
+    sema.release()
 
 
+def run_instances_for_enc(encodings_folder,instances_names,instances_folder,out_folder,cutoff_t):
+
+    with open(out_folder+'/cutoff.txt','w') as f:
+        f.write(str(cutoff_t))
+
+
+    concurrency = 4
+    total_task_num = os.listdir(encodings_folder)
+    sema = Semaphore(concurrency)
+    all_processes = []
+    for i,enc_name in enumerate(total_task_num):
+        sema.acquire()
+        p = Process(target=run_multiprocess, args=(enc_name,encodings_folder,instances_names,instances_folder,out_folder,cutoff_t,i,sema))
+        all_processes.append(p)
+        p.start()
+
+    for p in all_processes:
+        p.join()
+    print('Performance collection Done!')
 
 def combine_result(data_folder1,data_folder2):
 
@@ -210,8 +236,8 @@ def test_hardness_instances(encodings_folder,instances_folder,selected_ins,pre_r
                 os.system('rm '+pre_run_result_folder+'/*')
                 os.system('rm '+pre_run_data_final+'/*')
         '''
-        for enc in encodings_names:
-            run_instances_for_enc(enc,encodings_folder,instances_names,instances_folder,pre_run_result_folder,t_cutoff)
+        #for enc in encodings_names:
+        run_instances_for_enc(encodings_folder,instances_names,instances_folder,pre_run_result_folder,t_cutoff)
         
         #combine results
         combine_result(pre_run_result_folder,pre_run_data_final)
@@ -307,8 +333,8 @@ if __name__ == "__main__":
 
     print('\nSolving remaining instances...',t_cutoff,'s')
     #run all instances
-    for enc in encodings_names:
-        run_instances_for_enc(enc,encodings_folder,instances_names,instances_folder,output_result_folder,t_cutoff)
+    #for enc in encodings_names:
+    run_instances_for_enc(encodings_folder,instances_names,instances_folder,output_result_folder,t_cutoff)
     #combine results
     combine_result(output_result_folder,data_final)
 
