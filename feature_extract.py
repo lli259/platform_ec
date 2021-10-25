@@ -4,6 +4,9 @@ import numpy as np
 from collections import Counter
 import pandas as pd
 import subprocess
+from multiprocessing import Process
+from multiprocessing import Semaphore
+
 
 def define_args(arg_parser):
 
@@ -14,22 +17,9 @@ def define_args(arg_parser):
 def encoding_name_parser(enc_name):
     return enc_name.split('/')[1].split('.')[0].split('_')[0]
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    define_args(parser)
-    args = parser.parse_args()
 
-    instances_folder=args.instances_folder[0]
-    encodings_folder=args.encodings_folder[0]
-    features_folder=args.feature_data[0]
+def run_multiprocess(enc,encodings_folder,instances_folder,features_folder,process_i,sema):
 
-    encodings=os.listdir(encodings_folder)
-    instances=os.listdir(instances_folder)
-
-    if not os.path.exists(features_folder):
-        os.system('mkdir '+features_folder)
-
-    
     dynamic_f="Choices,Conflicts/Choices,Avg_Conflict_Levels,Avg_LBD_Levels,Learnt_from_Conflict,"\
         "Learnt_from_Loop,Frac_Learnt_from_Conflict,Frac_Learnt_from_Loop,Literals_in_Conflict_Nogoods,"\
         "Literals_in_Loop_Nogoods,Frac_Literals_in_Conflict_Nogoods,Frac_Literals_in_Loop_Nogoods,Removed_Nogoods,"\
@@ -55,39 +45,73 @@ if __name__ == "__main__":
         "Frac_Learnt_Others,Skipped_Levels_while_Backjumping,Avg_Skipped_Levels_while_Backjumping,Longest_Backjumping,"\
         "Running_Avg_Conflictlevel,Running_Avg_LBD,"+dynamic_f2
     
-    for enc in encodings:
-        print('Feature Extractor Running for',enc)
-        enc=encodings_folder+'/'+enc
-        if not os.path.exists(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv"):
-            with open(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv","a") as f:
-                f.write("instance_id,"+feature_names+"\n")
 
-        run_inst_df=pd.read_csv(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv")
-        run_inst=run_inst_df['instance_id'].values
+    instances=os.listdir(instances_folder)
+    enc=encodings_folder+'/'+enc
+    if not os.path.exists(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv"):
+        with open(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv","a") as f:
+            f.write("instance_id,"+feature_names+"\n")
 
-        for ins in instances:
-            if not ins in run_inst:
-                print('Extracting ',ins)
-                ins=instances_folder+'/'+ins
-                cmd_time="./tools/claspre/gringo "+enc+" "+ins+" | ./tools/claspre/claspre"
-                result_time=subprocess.getoutput(cmd_time)
-                result_time=result_time.split("\n")
+    run_inst_df=pd.read_csv(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv")
+    run_inst=run_inst_df['instance_id'].values
 
-                if len(result_time)<10:
-                    #fail
-                    print (ins.split("/")[1])
-                    print ('Fail')
-                else:
-                    
-                    f_values=[]
-                    for i in result_time[2:]:
-                        if "[" in i and "]" in i:
-                            feat_value_tem=""
-                            for ch in i:
-                                if ch in "0123456789.":
-                                    feat_value_tem+=ch
-                            f_values.append(feat_value_tem)
+    for ins in instances:
+        if not ins in run_inst:
+            print('Extracting ',enc,ins,'using process',process_i)
+            ins=instances_folder+'/'+ins
+            cmd_time="./tools/claspre/gringo "+enc+" "+ins+" | ./tools/claspre/claspre"
+            result_time=subprocess.getoutput(cmd_time)
+            result_time=result_time.split("\n")
 
-                    with open(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv","a") as f:
-                        f.write(ins.split("/")[1]+","+",".join(f_values)+"\n")
-                    print ('Done')
+            if len(result_time)<10:
+                #fail
+                print (ins.split("/")[1])
+                print ('Fail')
+            else:
+                
+                f_values=[]
+                for i in result_time[2:]:
+                    if "[" in i and "]" in i:
+                        feat_value_tem=""
+                        for ch in i:
+                            if ch in "0123456789.":
+                                feat_value_tem+=ch
+                        f_values.append(feat_value_tem)
+
+                with open(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv","a") as f:
+                    f.write(ins.split("/")[1]+","+",".join(f_values)+"\n")
+
+    sema.release()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    define_args(parser)
+    args = parser.parse_args()
+
+    instances_folder=args.instances_folder[0]
+    encodings_folder=args.encodings_folder[0]
+    features_folder=args.feature_data[0]
+
+    encodings=os.listdir(encodings_folder)
+    instances=os.listdir(instances_folder)
+
+    if not os.path.exists(features_folder):
+        os.system('mkdir '+features_folder)
+
+
+
+    concurrency = 4
+    total_task_num = os.listdir(encodings_folder)
+    sema = Semaphore(concurrency)
+    all_processes = []
+    for process_i,enc_name in enumerate(total_task_num):
+        sema.acquire()
+        p = Process(target=run_multiprocess, args=(enc_name,encodings_folder,instances_folder,features_folder,process_i,sema))
+        all_processes.append(p)
+        p.start()
+
+    for p in all_processes:
+        p.join()
+    print('Features collection Done!')
+
+
+    
