@@ -89,7 +89,7 @@ if args.p== ALLRUN or Encoding_candidate_gen in args.p or args.performance_provi
 #Feature extraction
 if args.p== ALLRUN or Feature_extraction in args.p or args.performance_provided:
     instances_folder=args.instances[0]
-    encodings_folder=args.selected_encodings[0]
+    encodings_folder=args.encodings[0]
     os.system('python feature_extract.py --instances_folder '+ instances_folder
     +' --encodings_folder ' + encodings_folder
     )
