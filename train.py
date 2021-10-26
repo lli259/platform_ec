@@ -42,7 +42,7 @@ def define_args(arg_parser):
     arg_parser.add_argument('--ml_models_folder', nargs='*', default=['ml_models'], help='Gringo input files')    
     arg_parser.add_argument('--interleave_folder', nargs='*', default=['interleave'], help='Gringo input files') 
     arg_parser.add_argument('--schedule_folder', nargs='*', default=['schedule'], help='Gringo input files') 
-    arg_parser.add_argument('--preprocessed',action='store_true', help='Gringo input files') 
+    arg_parser.add_argument('--performance_provided',action='store_true', help='Gringo input files') 
     
 parser = argparse.ArgumentParser()
 define_args(parser)
@@ -66,10 +66,12 @@ if args.p== ALLRUN or Performance_gen in args.p:
     +' --cutoff ' + args.cutoff[0]
     +' --performance_data ' + args.performance_data[0])
 
-
+    if not os.path.exists('cutoff/cutoff.txt'):
+        print('Data collection failed!')
+        exit()
 
 #Encoding_candidate generation
-if args.p== ALLRUN or Encoding_candidate_gen in args.p:
+if args.p== ALLRUN or Encoding_candidate_gen in args.p or args.performance_provided:
 
     cutoff=args.cutoff[0]
 
@@ -84,7 +86,7 @@ if args.p== ALLRUN or Encoding_candidate_gen in args.p:
     +' --performance_data ' + args.performance_data[0])
 
 #Feature extraction
-if args.p== ALLRUN or Feature_extraction in args.p:
+if args.p== ALLRUN or Feature_extraction in args.p or args.performance_provided:
     instances_folder=args.instances[0]
     encodings_folder=args.selected_encodings[0]
     os.system('python feature_extract.py --instances_folder '+ instances_folder
@@ -92,7 +94,7 @@ if args.p== ALLRUN or Feature_extraction in args.p:
     )
 
 #Feature selection
-if args.p== ALLRUN or Feature_selection in args.p:
+if args.p== ALLRUN or Feature_selection in args.p or args.performance_provided:
     feature_folder=args.feature_data[0]
     performance_folder=args.performance_select[0]
     feature_folder_extra = args.feature_domain[0]
@@ -102,7 +104,7 @@ if args.p== ALLRUN or Feature_selection in args.p:
     )
 
 #Machine Learning Model building
-if args.p== ALLRUN or Model_building in args.p or args.preprocessed:
+if args.p== ALLRUN or Model_building in args.p or args.performance_provided:
     feature_folder=args.feature_selected[0]
     performance_folder=args.performance_select[0]
     #cutoff=args.cutoff[0]
@@ -120,7 +122,7 @@ if args.p== ALLRUN or Model_building in args.p or args.preprocessed:
     )
 
 #Schedule building
-if args.p== ALLRUN or Schedule_building in args.p or args.preprocessed:
+if args.p== ALLRUN or Schedule_building in args.p or args.performance_provided:
 
     performance_folder=args.performance_select[0]
     
@@ -138,7 +140,7 @@ if args.p== ALLRUN or Schedule_building in args.p or args.preprocessed:
     )
 
 #Interleaving Schedule building
-if args.p== ALLRUN or Interleaving_building in args.p or args.preprocessed:
+if args.p== ALLRUN or Interleaving_building in args.p or args.performance_provided:
 
     performance_folder=args.performance_select[0]
 
@@ -156,7 +158,7 @@ if args.p== ALLRUN or Interleaving_building in args.p or args.preprocessed:
 
 
 #Interleaving Schedule building
-if args.p== ALLRUN or Evaluation in args.p or args.preprocessed:
+if args.p== ALLRUN or Evaluation in args.p or args.performance_provided:
 
     performance_folder=args.performance_select[0]
 
