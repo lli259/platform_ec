@@ -90,7 +90,7 @@ def save_to_folder_with_domain(args,selected_features,selected_file,most_meaning
     feature_data_selected.to_csv(feature_outfolder+'/'+'features_select.csv')
 
 def select_f(args,performance_folder_group):
-    
+    print('Feature Evaluation: Group',performance_folder_group)
     #clasp features
     feature_folder=args.feature_folder[0]
     performance_folder=args.performance_folder[0]
@@ -121,7 +121,7 @@ def select_f(args,performance_folder_group):
                 feature_selected_num_min=int(len(feature_data.columns)*0.4)
                 feature_selected_num_max=int(len(feature_data.columns)*0.7)            
             for diff_f_num in range(feature_selected_num_min,feature_selected_num_max+1):
-                print('Feature Evaluation: ',diff_f_num)
+                #print('Feature Evaluation: ',diff_f_num)
                 most_meaning_f=get_most_meaningful(feature_data,performance_data,diff_f_num)
                 score=get_accuracy(most_meaning_f,feature_data,performance_data)
                 all_diff_features.append((score,most_meaning_f,f_each_enc))
@@ -156,7 +156,7 @@ def select_f(args,performance_folder_group):
             feature_selected_num_min=int(len(feature_domain.columns)*0.4)
             feature_selected_num_max=int(len(feature_domain.columns)*0.7)            
         for diff_f_num in range(feature_selected_num_min,feature_selected_num_max+1):
-            print('Domain Feature Evaluation: ',diff_f_num)
+            #print('Domain Feature Evaluation: ',diff_f_num)
             most_meaning_f_dm=get_most_meaningful(feature_domain,performance_data,diff_f_num)
             score=get_accuracy(most_meaning_f_dm,feature_domain,performance_data)
             all_diff_features.append((score,most_meaning_f_dm))
