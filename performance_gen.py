@@ -145,11 +145,13 @@ def select_prerun_instance(instances_names):
 
     return selected_enc
 
-def save_cutoff(t_cutoff):
+def make_cutoff():
     if not os.path.exists('cutoff'):
-        os.mkdir('cutoff')    
-    os.system('rm cutoff/*')  
+        os.mkdir('cutoff')
+    else:   
+        os.system('rm cutoff/*')  
 
+def save_cutoff(t_cutoff):
     with open('cutoff/cutoff.txt','w') as f:
         f.write(str(t_cutoff))
 
@@ -286,6 +288,7 @@ if __name__ == "__main__":
     define_args(parser)
     args = parser.parse_args()
 
+    
 
     encodings_folder=args.encodings[0]
     instances_folder=args.instances[0]
@@ -293,6 +296,8 @@ if __name__ == "__main__":
     data_final=args.performance_data[0]
     output_result_folder=data_final+'_each_enc'
 
+    make_cutoff()
+    
     if not os.path.exists(data_final):
         os.mkdir(data_final)    
 

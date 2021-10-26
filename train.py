@@ -70,10 +70,16 @@ if args.p== [0] or Performance_gen in args.p:
 #Encoding_candidate generation
 if args.p== [0] or Encoding_candidate_gen in args.p:
 
+    cutoff=args.cutoff[0]
+
+    if os.path.exists('cutoff/cutoff.txt'):
+        with open('cutoff/cutoff.txt','r') as f:
+            cutoff=f.readline()
+            
     os.system('python selected_candidate.py '
     +' --encodings ' +args.encodings[0]
     +' --selected_encodings ' +args.selected_encodings[0]
-    +' --cutoff ' + args.cutoff[0]
+    +' --cutoff ' + cutoff
     +' --performance_data ' + args.performance_data[0])
 
 #Feature extraction
@@ -99,7 +105,13 @@ if args.p== [0] or Model_building in args.p or args.preprocessed:
     feature_folder=args.feature_selected[0]
     performance_folder=args.performance_select[0]
     #cutoff=args.cutoff[0]
-    cutoff ='200'
+    #cutoff ='200'
+
+    cutoff=args.cutoff[0]
+
+    if os.path.exists('cutoff/cutoff.txt'):
+        with open('cutoff/cutoff.txt','r') as f:
+            cutoff=f.readline()
 
     os.system('python model_building.py --feature_folder '+ feature_folder 
     +' --performance_folder ' + performance_folder
@@ -110,8 +122,14 @@ if args.p== [0] or Model_building in args.p or args.preprocessed:
 if args.p== [0] or Schedule_building in args.p or args.preprocessed:
 
     performance_folder=args.performance_select[0]
-    #cutoff=args.cutoff[0]
-    cutoff ='200'
+    
+    #cutoff ='200'
+
+    cutoff=args.cutoff[0]
+
+    if os.path.exists('cutoff/cutoff.txt'):
+        with open('cutoff/cutoff.txt','r') as f:
+            cutoff=f.readline()
 
     os.system('python schedule_build.py '
     +' --performance_folder ' + performance_folder
@@ -122,8 +140,13 @@ if args.p== [0] or Schedule_building in args.p or args.preprocessed:
 if args.p== [0] or Interleaving_building in args.p or args.preprocessed:
 
     performance_folder=args.performance_select[0]
-    #cutoff=args.cutoff[0]
-    cutoff ='200'
+
+    #cutoff ='200'
+    cutoff=args.cutoff[0]
+
+    if os.path.exists('cutoff/cutoff.txt'):
+        with open('cutoff/cutoff.txt','r') as f:
+            cutoff=f.readline()
 
     os.system('python interleave_build.py '
     +' --performance_folder ' + performance_folder
@@ -135,8 +158,12 @@ if args.p== [0] or Interleaving_building in args.p or args.preprocessed:
 if args.p== [0] or Evaluation in args.p or args.preprocessed:
 
     performance_folder=args.performance_select[0]
-    #cutoff=args.cutoff[0]
-    cutoff ='200'
+
+    cutoff=args.cutoff[0]
+
+    if os.path.exists('cutoff/cutoff.txt'):
+        with open('cutoff/cutoff.txt','r') as f:
+            cutoff=f.readline()
 
     os.system('python evaluation.py '
     +' --performance_folder ' + performance_folder
