@@ -502,10 +502,10 @@ def machine_learning(args,ml_group):
     #drawLine()
     #print("Indivadual encoding and Oracle performance: ")
     for alg in runtimeIndex:
-        sv_percent,sv_time=printSvdPercAvgTime(alg+"",leaveResult[alg],TIME_MAX)
-        write2eva2(alg+ml_group,sv_percent,sv_time,False)
-    sv_percent,sv_time=printSvdPercAvgTime("oracle_portfolio",leaveResult.Oracle_value.values,TIME_MAX)
-    write2eva2("oracle_portfolio"+ml_group,sv_percent,sv_time,False)
+        sv_percent,sv_time=printSvdPercAvgTime(alg+"",leaveResult[alg],TIME_MAX,False)
+        write2eva2(alg+ml_group,sv_percent,sv_time)
+    sv_percent,sv_time=printSvdPercAvgTime("oracle_portfolio",leaveResult.Oracle_value.values,TIME_MAX,False)
+    write2eva2("oracle_portfolio"+ml_group,sv_percent,sv_time)
     #print("\nEncoding selection performance: ")
     for mName in "DT,RF,kNN".split(","):
         #print(mName)
