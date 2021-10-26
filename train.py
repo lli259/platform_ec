@@ -5,6 +5,7 @@ import argparse,os
 Platform Learning
 
 '''
+ALLRUN=['0']
 Encoding_rewrite='1'
 Performance_gen='2'
 Encoding_candidate_gen='3'
@@ -49,7 +50,7 @@ args = parser.parse_args()
 
 #Encoding rewrite
 
-if args.p== [0] or Encoding_rewrite in args.p :
+if args.p== ALLRUN or Encoding_rewrite in args.p :
     for enc_file in os.listdir(args.encodings[0]):
         if (not enc_file ==  None) and (not 'aagg.lp'  in enc_file):
             os.system('python aaggrewrite.py '+args.encodings[0]+'/'+enc_file
@@ -58,7 +59,7 @@ if args.p== [0] or Encoding_rewrite in args.p :
 
 
 #performance data generation
-if args.p== [0] or Performance_gen in args.p:
+if args.p== ALLRUN or Performance_gen in args.p:
     os.system('python performance_gen.py '
     +' --encodings ' +args.encodings[0]
     +' --instances ' +args.instances[0]
@@ -68,7 +69,7 @@ if args.p== [0] or Performance_gen in args.p:
 
 
 #Encoding_candidate generation
-if args.p== [0] or Encoding_candidate_gen in args.p:
+if args.p== ALLRUN or Encoding_candidate_gen in args.p:
 
     cutoff=args.cutoff[0]
 
@@ -83,7 +84,7 @@ if args.p== [0] or Encoding_candidate_gen in args.p:
     +' --performance_data ' + args.performance_data[0])
 
 #Feature extraction
-if args.p== [0] or Feature_extraction in args.p:
+if args.p== ALLRUN or Feature_extraction in args.p:
     instances_folder=args.instances[0]
     encodings_folder=args.selected_encodings[0]
     os.system('python feature_extract.py --instances_folder '+ instances_folder
@@ -91,7 +92,7 @@ if args.p== [0] or Feature_extraction in args.p:
     )
 
 #Feature selection
-if args.p== [0] or Feature_selection in args.p:
+if args.p== ALLRUN or Feature_selection in args.p:
     feature_folder=args.feature_data[0]
     performance_folder=args.performance_select[0]
     feature_folder_extra = args.feature_domain[0]
@@ -101,7 +102,7 @@ if args.p== [0] or Feature_selection in args.p:
     )
 
 #Machine Learning Model building
-if args.p== [0] or Model_building in args.p or args.preprocessed:
+if args.p== ALLRUN or Model_building in args.p or args.preprocessed:
     feature_folder=args.feature_selected[0]
     performance_folder=args.performance_select[0]
     #cutoff=args.cutoff[0]
@@ -119,7 +120,7 @@ if args.p== [0] or Model_building in args.p or args.preprocessed:
     )
 
 #Schedule building
-if args.p== [0] or Schedule_building in args.p or args.preprocessed:
+if args.p== ALLRUN or Schedule_building in args.p or args.preprocessed:
 
     performance_folder=args.performance_select[0]
     
@@ -137,7 +138,7 @@ if args.p== [0] or Schedule_building in args.p or args.preprocessed:
     )
 
 #Interleaving Schedule building
-if args.p== [0] or Interleaving_building in args.p or args.preprocessed:
+if args.p== ALLRUN or Interleaving_building in args.p or args.preprocessed:
 
     performance_folder=args.performance_select[0]
 
@@ -155,7 +156,7 @@ if args.p== [0] or Interleaving_building in args.p or args.preprocessed:
 
 
 #Interleaving Schedule building
-if args.p== [0] or Evaluation in args.p or args.preprocessed:
+if args.p== ALLRUN or Evaluation in args.p or args.preprocessed:
 
     performance_folder=args.performance_select[0]
 
