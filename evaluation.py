@@ -25,7 +25,9 @@ if __name__ == "__main__":
         print(l[:-1])
     
     df=pd.read_csv('evaluation/result.csv')
-    df=df.sort_values(by=['solving','time'])
+    df=df.sort_values(by=['solving'])
+    df=df[df.solving==df.iloc[-1].solving]
+    df=df.sort_values(by=['time'])
     print('\nBest Solution:',df.iloc[-1]['method'])
     print('\n......................')
     print('\nSolution evaluating on new instances...')
