@@ -67,7 +67,7 @@ def run_multiprocess(enc_name,encodings_folder,instances_names,instances_folder,
 
 
     for instance in instances_names:  
-        if not instance.split(".")[0] in solved_instances:         
+        if not instance in solved_instances:         
             
             cmdline='tools/gringo '+encodings_folder+'/'+enc_name +' '+instances_folder+'/'+instance +' | tools/clasp --time-limit=' + str(cutoff_t)
             #print(cmdline)
@@ -77,7 +77,7 @@ def run_multiprocess(enc_name,encodings_folder,instances_names,instances_folder,
             tm,md=clasp_result_parser(process_ret)
             print('Result ',enc_name,instance,tm,md)
             with open (outfile,'a') as f:
-                f.write(str(instance).split('.')[0]+','+str(tm)+','+str(md)+'\n')   
+                f.write(str(instance)+','+str(tm)+','+str(md)+'\n')   
 
     sema.release()
 
@@ -217,7 +217,7 @@ def cp_old_history(input_folder,output_folder,instances_folder):
 
     result_files=os.listdir(input_folder)
     allinsts=os.listdir(instances_folder)
-    allinsts=[i.split('.')[0] for i in allinsts]
+    #allinsts=[i.split('.')[0] for i in allinsts]
     for result_file in result_files:
         file_df=pd.read_csv(input_folder+'/'+result_file)
         file_df=file_df.set_index(file_df.columns.values[0])
