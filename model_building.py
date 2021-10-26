@@ -69,17 +69,19 @@ def max_relative_score(y_true, y_pred):
 		return -max(res)
 
 #print solved percentage and avg runtime
-def printSvdPercAvgTime(p,runtime,maxtime):
+def printSvdPercAvgTime(p,runtime,maxtime,printresult=True):
 	#success
 	sucs=[]
 	for i in runtime:
 		if i<maxtime-1:
 			sucs.append(i)
 	if len(sucs)!=0:
-		print(p,float(len(sucs))/len(runtime),"/",float(sum(sucs))/len(sucs))
+		if printresult:
+			print(p,float(len(sucs))/len(runtime),"/",float(sum(sucs))/len(sucs))
 		return float(len(sucs))/len(runtime), float(sum(sucs))/len(sucs)
 	else:
-		print(p,float(0),"/",float(0))
+		if printresult:
+			print(p,float(0),"/",float(0))
 		return 0,0
 
 #split 80% trainset into validSet, trainSet with specified binNum and which bin.
@@ -496,17 +498,17 @@ def machine_learning(args,ml_group):
 
     print('\n')
   
-    print("leaveSet")
-    drawLine()
-    print("Indivadual encoding and Oracle performance: ")
+    #print("leaveSet")
+    #drawLine()
+    #print("Indivadual encoding and Oracle performance: ")
     for alg in runtimeIndex:
         sv_percent,sv_time=printSvdPercAvgTime(alg+"",leaveResult[alg],TIME_MAX)
-        write2eva2(alg+ml_group,sv_percent,sv_time)
+        write2eva2(alg+ml_group,sv_percent,sv_time,False)
     sv_percent,sv_time=printSvdPercAvgTime("oracle_portfolio",leaveResult.Oracle_value.values,TIME_MAX)
-    write2eva2("oracle_portfolio"+ml_group,sv_percent,sv_time)
-    print("\nEncoding selection performance: ")
+    write2eva2("oracle_portfolio"+ml_group,sv_percent,sv_time,False)
+    #print("\nEncoding selection performance: ")
     for mName in "DT,RF,kNN".split(","):
-        print(mName)
+        #print(mName)
         encRuntime=[i for i in leaveResult.columns if "runtime" in i]
         modelRuntime=[i for i in leaveResult.columns if mName in i]
         modelResults=leaveResult[encRuntime+modelRuntime].copy()
@@ -522,7 +524,7 @@ def machine_learning(args,ml_group):
         bestruntime=[modelResults[bestname[i]].values[i]  for i in range(len(modelResults))]
         modelResults["1st_ham"]=bestname
         modelResults["1st_time"]=bestruntime
-        sv_percent,sv_time=printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
+        sv_percent,sv_time=printSvdPercAvgTime("1st",bestruntime,TIME_MAX,False)
         write2eva2(mName+ml_group,sv_percent,sv_time)
 
         secondpredname=[i[1][1] for i in predictedList]
