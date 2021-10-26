@@ -136,13 +136,13 @@ def select_f(args,performance_folder_group):
 
     #domain features
     feature_domain_folder=args.feature_folder_extra[0]
-    feature_domain_file=None
+    feature_domain_file=[]
     if os.path.exists(feature_domain_folder):
-        feature_domain_file=os.listdir(feature_domain_folder)[0]
-    if feature_domain_file ==None:
+        feature_domain_file=os.listdir(feature_domain_folder)
+    if feature_domain_file ==[]:
         save_to_folder(args,selected_features,selected_file,performance_folder_group)
     else:
-        feature_domain=pd.read_csv(feature_domain_folder+'/'+feature_domain_file)
+        feature_domain=pd.read_csv(feature_domain_folder+'/'+feature_domain_file[0])
         feature_domain=feature_domain.set_index(feature_domain.columns[0])
         feature_domain=feature_domain.dropna()
         #print('domain feature selection...',feature_domain.shape)
