@@ -122,7 +122,7 @@ if __name__ == "__main__":
     avg_rt_tuple=[]
     for i in cols:
         alltime=df[i].values
-        solved=[1 if i <TIME else 0 for i in alltime]
+        solved=[1 if j <TIME else 0 for j in alltime]
         solved_p=sum(solved)/len(alltime)
         avg_t=sum(alltime)/len(alltime)
         solving_tuple.append((solved_p,i))
@@ -135,6 +135,7 @@ if __name__ == "__main__":
     winsore=0
     solving=0
     for i,v in enumerate(solving_tuple):
+        #print(v)
         name=v[1]
         this_solving=v[0]
         if this_solving != solving:
@@ -142,8 +143,9 @@ if __name__ == "__main__":
             score_dict[name]+=winsore
             solving=this_solving
         else:
+            #print(score_dict,name,v)
             score_dict[name]+=winsore
-
+            
     print(solving_tuple,score_dict)
 
     avg_rt_tuple=sorted(avg_rt_tuple)
