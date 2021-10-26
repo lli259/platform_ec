@@ -31,11 +31,12 @@ def checkMakeFolder(fdname):
     if not os.path.exists(fdname):
         os.makedirs(fdname)
 
-def cleanFolder(fdname):
-    if os.path.exists(fdname):
-        ans=input('need to retrain models? y/n')
-        if ans =='y':
-            os.system('rm -r '+fdname+'/*')
+def cleanFolder(fdnames):    
+    ans=input('need to retrain models? y/n')
+    if ans =='y':
+        for file_in in fdnames:
+            if os.path.exists(file_in):
+                os.system('rm -r '+file_in+'/*')
 
 #write to evaluation file2 
 #evaluation/result2.csv
@@ -559,9 +560,8 @@ if __name__ == "__main__":
     ml_hyperfolder=args.ml_hyper_folder[0]
 
     checkMakeFolder(ml_hyperfolder)
-    cleanFolder(ml_hyperfolder)
     checkMakeFolder(ml_outfolder)
-    cleanFolder(ml_outfolder)
+    cleanFolder([ml_hyperfolder,ml_outfolder])
 
     #evaluating
     if not os.path.exists('evaluation'):
