@@ -136,7 +136,9 @@ def select_f(args,performance_folder_group):
 
     #domain features
     feature_domain_folder=args.feature_folder_extra[0]
-    feature_domain_file=os.listdir(feature_domain_folder)[0]
+    feature_domain_file=None
+    if os.path.exists(feature_domain_folder):
+        feature_domain_file=os.listdir(feature_domain_folder)[0]
     if feature_domain_file ==None:
         save_to_folder(args,selected_features,selected_file,performance_folder_group)
     else:
