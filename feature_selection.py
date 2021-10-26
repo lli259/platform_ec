@@ -125,7 +125,7 @@ def select_f(args,performance_folder_group):
                 most_meaning_f=get_most_meaningful(feature_data,performance_data,diff_f_num)
                 score=get_accuracy(most_meaning_f,feature_data,performance_data)
                 all_diff_features.append((score,most_meaning_f,f_each_enc))
-            print(all_diff_features)
+            #print(all_diff_features)
             all_diff_features=sorted(all_diff_features)
             best_score=all_diff_features[0]
             allscore.append(best_score)
@@ -161,9 +161,10 @@ def select_f(args,performance_folder_group):
             score=get_accuracy(most_meaning_f_dm,feature_domain,performance_data)
             all_diff_features.append((score,most_meaning_f_dm))
             
-        print(all_diff_features)
+        #print(all_diff_features)
         all_diff_features=sorted(all_diff_features)
-        best_score=all_diff_features[0]       
+        best_score=all_diff_features[0]
+        print(best_score,all_diff_features)       
         most_meaning_f_dm=best_score[1]
         save_to_folder_with_domain(args,selected_features,selected_file,most_meaning_f_dm,performance_folder_group)
 
