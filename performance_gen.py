@@ -112,7 +112,7 @@ def combine_result(data_folder1,data_folder2):
     pd1=pd1.set_index(cols[0])
     timecol='time'
     pd1=pd1[[timecol]]
-    cols=[ timecol+'_'+allcsv[0].split('_')[0] ]
+    cols=[ allcsv[0].split('_')[0] ]
     pd1.columns=cols
 
     for pointer in range(1,len(allcsv)):
@@ -124,7 +124,7 @@ def combine_result(data_folder1,data_folder2):
         #print('pd1',pd1)
         #print('pd11',pd11)
         pd11=pd11[[timecol]]
-        cols=[ timecol+'_'+allcsv[pointer].split('_')[0] ]
+        cols=[ allcsv[pointer].split('_')[0] ]
         pd11.columns=cols
 
         pd1=pd1.join(pd11)
@@ -163,7 +163,7 @@ def easy_hard_to(t,cutoff):
 def hardness_for_list(l):
     #['hard','easy','timeout']
     hard=easy=timeout=0
-    for i in range(0,len(l)):
+    for i in l:
         if i=='hard':
             hard+=1
         if i=='easy':
@@ -189,6 +189,7 @@ def get_hardness(data_final,t_cutoff):
         df_col=df[c].values
         hardness_this_list=[ easy_hard_to(item,t_cutoff) for item in df_col]
         hardness_this=hardness_for_list(hardness_this_list)
+        #print(hardness_this_list,hardness_this)
         hardness_each_enc.append(hardness_this)
     return hardness_each_enc
 
@@ -202,13 +203,31 @@ def get_cutoff(pre_run_data_final):
 
 def delete_and_save(folder):
     copy_folder = initial= folder
-    for i in range(1,20):
+    for i in range(1,21):
         copy_folder= initial+ str(i) 
         if not os.path.exists(copy_folder):
             os.mkdir(copy_folder)
             break
     os.system('mv '+folder+'/* '+copy_folder+'/')
+    return copy_folder
 
+def cp_old_history(input_folder,output_folder,instances_folder):
+
+    result_files=os.listdir(input_folder)
+    allinsts=os.listdir(instances_folder)
+    allinsts=[i.split('.')[0] for i in allinsts]
+    for result_file in result_files:
+        file_df=pd.read_csv(input_folder+'/'+result_file)
+        file_df=file_df.set_index(file_df.columns.values[0])
+        allrun=[]
+        for index in file_df.index.values:
+            if index in allinsts:
+                allrun.append(index)
+        file_df=file_df.loc[allrun,:] 
+        #print(file_df,input_folder)
+        file_df.to_csv(output_folder+'/'+result_file)
+
+            
 
 def test_hardness_instances(encodings_folder,instances_folder,selected_ins,pre_run_data_final,pre_run_result_folder,t_cutoff):
 
@@ -220,10 +239,16 @@ def test_hardness_instances(encodings_folder,instances_folder,selected_ins,pre_r
     for pre_run in range(0,3): #timeoff.2timeoff.4timeoff
         print('\nSolving prerun instances...round ',pre_run,':', t_cutoff,'s')
 
-        #delete history
+        #compare history and update pre_run_result, not rerun
         if os.listdir(pre_run_result_folder)!=[] or os.listdir(pre_run_data_final)!=[]:
-            delete_and_save(pre_run_result_folder)
-            delete_and_save(pre_run_data_final)
+
+            pre_run_result_folder1=delete_and_save(pre_run_result_folder)
+            pre_run_data_final1=delete_and_save(pre_run_data_final)
+
+            if int(t_cutoff)== int(get_cutoff(pre_run_result_folder1)):
+                cp_old_history(pre_run_result_folder1,pre_run_result_folder,instances_folder)
+                cp_old_history(pre_run_data_final1,pre_run_data_final,instances_folder)
+
             #print('old file detected')
 
         
@@ -289,10 +314,10 @@ if __name__ == "__main__":
     hardness,t_cutoff=test_hardness_instances(encodings_folder,instances_folder,selected_ins,pre_run_data_final,pre_run_result_folder,t_cutoff)
 
     if hardness=='timeout':
-        print('\nExit! Instances are too hard to solve in ',t_cutoff)
+        print('\nExit! Instances are too hard to solve in ',t_cutoff,'s')
         exit()
     if hardness=='easy':
-        print('\nExit! Instances are too easy to solve in ',t_cutoff)
+        print('\nExit! Instances are too easy to solve in ',t_cutoff,'s')
         exit()
     
     #append pre_run to existing final results
