@@ -162,6 +162,26 @@ def easy_hard_to(t,cutoff):
         return 'timeout'
     return 'hard'
 
+#for all encodings on one instances
+def hardness_for_instance(l):
+    #['hard','easy','timeout']
+    hard=easy=timeout=0
+    for i in l:
+        if i=='hard':
+            hard+=1
+        if i=='easy':
+            easy+=1
+        if i=='timeout':
+            timeout+=1
+    if hard> 0:
+        return 'hard'
+    if timeout== len(l):
+        return 'timeout'
+    if easy== len(l):
+        return 'easy'
+    return 'hard'
+
+#for all instances
 def hardness_for_list(l):
     #['hard','easy','timeout']
     hard=easy=timeout=0
@@ -187,10 +207,10 @@ def get_hardness(data_final,t_cutoff):
     df=df.set_index(cols[0])
     cols=df.columns.values
     hardness_each_enc=[]
-    for c in cols:
-        df_col=df[c].values
-        hardness_this_list=[ easy_hard_to(item,t_cutoff) for item in df_col]
-        hardness_this=hardness_for_list(hardness_this_list)
+    for ind in df.index.values:
+        df_row=df.loc[ind,:].values
+        hardness_this_list=[easy_hard_to(float(elem),t_cutoff) for elem in df_row]
+        hardness_this=hardness_for_instance(hardness_this_list)
         #print(hardness_this_list,hardness_this)
         hardness_each_enc.append(hardness_this)
     return hardness_each_enc
