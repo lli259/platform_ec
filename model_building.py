@@ -31,7 +31,13 @@ def checkMakeFolder(fdname):
     if not os.path.exists(fdname):
         os.makedirs(fdname)
 
-def cleanFolder(fdnames):    
+def check_content(fdname):
+    if os.listdir(fdname) == []:
+        return False
+    else:
+        return True
+
+def cleanFolder(fdnames):   
     ans=input('need to retrain models? y/n')
     if ans =='y':
         for file_in in fdnames:
@@ -561,7 +567,9 @@ if __name__ == "__main__":
 
     checkMakeFolder(ml_hyperfolder)
     checkMakeFolder(ml_outfolder)
-    cleanFolder([ml_hyperfolder,ml_outfolder])
+
+    if check_content(ml_hyperfolder) or check_content(ml_hyperfolder):
+        cleanFolder([ml_hyperfolder,ml_outfolder])
 
     #evaluating
     if not os.path.exists('evaluation'):

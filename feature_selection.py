@@ -177,11 +177,12 @@ if __name__ == "__main__":
 
     feature_outfolder=args.feature_outfolder[0]
     if  os.path.exists(feature_outfolder):
-        ans_retrain=input('Features were selected! Need to rerun? y/n')
-        if ans_retrain !='y':
-            print('Feature Selection Passes')
-            exit()
-        os.system('rm -r '+feature_outfolder+'/*')
+        if os.listdir(feature_outfolder) !=[]:
+            ans_retrain=input('Features were selected! Need to rerun? y/n')
+            if ans_retrain !='y':
+                print('Feature Selection Passes')
+                exit()
+            os.system('rm -r '+feature_outfolder+'/*')
     else:
         os.system('mkdir '+feature_outfolder)
     performance_folder=args.performance_folder[0]
