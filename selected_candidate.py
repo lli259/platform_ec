@@ -22,6 +22,23 @@ if __name__ == "__main__":
     t_cutoff=int(args.cutoff[0])
     data_folder=args.performance_data[0]
     enc_out_folder=args.selected_encodings[0]
+
+
+
+    if  os.path.exists(enc_out_folder):
+        if len(os.listdir(enc_out_folder)) ==4 :
+            ans_retrain=input('Encoding candidates were already selected! Need to rerun? y/n')
+            if ans_retrain !='y':
+                print('Encoding Candidates Generation Passes')
+                exit()
+            os.system('rm -r '+enc_out_folder+'/*')
+        else:
+            os.system('rm -r '+enc_out_folder+'/*')
+    else:
+        #os.system('mkdir '+feature_outfolder)
+        pass
+
+
     enc_folder=args.encodings[0]
 
     allcandidate=len(os.listdir(enc_folder))
@@ -186,8 +203,8 @@ if __name__ == "__main__":
     #enc_out_folder=enc_folder+'_selected'
     if not os.path.exists(enc_out_folder):
         os.system('mkdir '+enc_out_folder)
-    else:
-        os.system('rm -r '+enc_out_folder)    
+    #else:
+        #os.system('rm -r '+enc_out_folder+'/*')   
 
     for index_candidate,n_candidate in enumerate(range(n_candidate_min,n_candidate_max+1)):
         top_col=[]

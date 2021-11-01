@@ -303,6 +303,27 @@ def test_hardness_instances(encodings_folder,instances_folder,selected_ins,pre_r
 
     return hardness,t_cutoff
 
+#if performance exist and instances=instances and encodings=encodings, exit
+def already_collected(p_folder,all_encodings,all_instances):
+    if not os.path.exists(p_folder+'/performance.csv'):
+        return False
+    else:
+        df_check=pd.read_csv(p_folder+'/performance.csv')
+        df_check=df_check.set_index(df_check.columns.values[0])
+
+        all_encodings=len(all_encodings)
+        all_encodings_pd=len(list(df_check.columns.values))
+        if all_encodings != all_encodings_pd:
+            return False      
+
+        all_instances=set(all_instances)
+        all_instances_pd=set(list(df_check.index.values))
+        if all_instances != all_instances_pd:
+            return False
+
+    return True
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     define_args(parser)
@@ -326,6 +347,10 @@ if __name__ == "__main__":
 
     encodings_names=os.listdir(encodings_folder)
     instances_names=os.listdir(instances_folder)
+
+    if already_collected(data_final,encodings_names,instances_names):
+        print('Performance data exists. Performance data collection passes')
+        exit()
 
     #choose len/10, at least 10 or len, at most 100, to test hardness and set cutoff time
     selected_ins=select_prerun_instance(instances_names)

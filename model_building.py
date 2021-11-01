@@ -38,7 +38,7 @@ def check_content(fdname):
         return True
 
 def cleanFolder(fdnames):   
-    ans=input('need to retrain models? y/n')
+    ans=input('Models existed. Need to retrain models? y/n')
     if ans =='y':
         for file_in in fdnames:
             if os.path.exists(file_in):
