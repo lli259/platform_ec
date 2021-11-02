@@ -306,6 +306,7 @@ def test_hardness_instances(encodings_folder,instances_folder,selected_ins,pre_r
 #if performance exist and instances=instances and encodings=encodings, exit
 def already_collected(p_folder,all_encodings,all_instances):
     if not os.path.exists(p_folder+'/performance.csv'):
+        print('Data file exits')
         return False
     else:
         df_check=pd.read_csv(p_folder+'/performance.csv')
@@ -314,11 +315,15 @@ def already_collected(p_folder,all_encodings,all_instances):
         all_encodings=len(all_encodings)
         all_encodings_pd=len(list(df_check.columns.values))
         if all_encodings != all_encodings_pd:
+            print('encodings not match')
             return False      
 
         all_instances=set(all_instances)
         all_instances_pd=set(list(df_check.index.values))
-        if all_instances != all_instances_pd:
+        print(all_instances)
+        print(all_instances_pd)
+        if len(all_instances.difference(all_instances_pd))!=0:
+            print('instances not match')
             return False
 
     return True
@@ -337,7 +342,6 @@ if __name__ == "__main__":
     data_final=args.performance_data[0]
     output_result_folder=data_final+'_each_enc'
 
-    make_cutoff()
     
     if not os.path.exists(data_final):
         os.mkdir(data_final)    
@@ -351,6 +355,8 @@ if __name__ == "__main__":
     if already_collected(data_final,encodings_names,instances_names):
         print('Performance data exists. Performance data collection passes')
         exit()
+    
+    make_cutoff()
 
     #choose len/10, at least 10 or len, at most 100, to test hardness and set cutoff time
     selected_ins=select_prerun_instance(instances_names)

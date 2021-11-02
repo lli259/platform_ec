@@ -68,7 +68,7 @@ if args.p== ALLRUN or Performance_gen in args.p:
     +' --performance_data ' + args.performance_data[0])
 
     if not os.path.exists('cutoff/cutoff.txt'):
-        print('Data collection failed!')
+        print('Cutoff not set. Data collection failed!')
         exit()
 
 #Encoding_candidate generation
