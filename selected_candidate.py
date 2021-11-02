@@ -25,8 +25,16 @@ if __name__ == "__main__":
 
 
 
+    enc_folder=args.encodings[0]
+
+    allcandidate=len(os.listdir(enc_folder))
+
+    n_candidate_min=min(3,allcandidate)
+    n_candidate_max=min(6,allcandidate)
+
+
     if  os.path.exists(enc_out_folder):
-        if len(os.listdir(enc_out_folder)) ==4 :
+        if len(os.listdir(enc_out_folder)) == n_candidate_max-n_candidate_min+1 :
             ans_retrain=input('Encoding candidates were already selected! Need to rerun? y/n')
             if ans_retrain !='y':
                 print('Encoding Candidates Generation Passes')
@@ -38,13 +46,6 @@ if __name__ == "__main__":
         #os.system('mkdir '+feature_outfolder)
         pass
 
-
-    enc_folder=args.encodings[0]
-
-    allcandidate=len(os.listdir(enc_folder))
-
-    n_candidate_min=min(3,allcandidate)
-    n_candidate_max=min(6,allcandidate)
 
     data_f=data_folder+'/'+os.listdir(data_folder)[0]
     df=pd.read_csv(data_f)

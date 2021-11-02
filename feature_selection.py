@@ -174,10 +174,13 @@ if __name__ == "__main__":
     define_args(parser)
     args = parser.parse_args()
 
+    performance_folder=args.performance_folder[0]
+    performance_folder_groups=os.listdir(performance_folder)
+
 
     feature_outfolder=args.feature_outfolder[0]
     if  os.path.exists(feature_outfolder):
-        if len(os.listdir(feature_outfolder)) ==4 :
+        if len(os.listdir(feature_outfolder)) ==len(performance_folder_groups) :
             ans_retrain=input('Features were already selected! Need to rerun? y/n')
             if ans_retrain !='y':
                 print('Feature Selection Passes')
@@ -187,8 +190,7 @@ if __name__ == "__main__":
             os.system('rm -r '+feature_outfolder+'/*')
     else:
         os.system('mkdir '+feature_outfolder)
-    performance_folder=args.performance_folder[0]
-    performance_folder_groups=os.listdir(performance_folder)
+
     for performance_folder_group in performance_folder_groups:
         select_f(args,performance_folder_group)
 
