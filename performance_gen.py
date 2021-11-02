@@ -320,8 +320,8 @@ def already_collected(p_folder,all_encodings,all_instances):
 
         all_instances=set(all_instances)
         all_instances_pd=set(list(df_check.index.values))
-        print(all_instances)
-        print(all_instances_pd)
+        #print(all_instances)
+        #print(all_instances_pd)
         if len(all_instances.difference(all_instances_pd))!=0:
             print('instances not match')
             return False
