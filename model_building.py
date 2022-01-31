@@ -75,7 +75,7 @@ def max_relative_score(y_true, y_pred):
 				res.append((y_pred[i]-y_true[i])/(y_true[i]))
 		return -max(res)
 
-#print solved percentage and avg runtime
+#print solved percentage and avg solving only time
 def printSvdPercAvgTime(p,runtime,maxtime,printresult=True):
 	#success
 	sucs=[]
@@ -89,6 +89,24 @@ def printSvdPercAvgTime(p,runtime,maxtime,printresult=True):
 	else:
 		if printresult:
 			print(p,float(0),"/",float(0))
+		return 0,0
+
+#print solved percentage and real avg runtime
+def printSvdPercAvgTime2(p,runtime,maxtime,printresult=True):
+	#success
+	sucs=[]
+	time_real=[]
+	for i in runtime:
+		time_real.append(i)
+		if i<maxtime-1:
+			sucs.append(i)
+	if len(sucs)!=0:
+		if printresult:
+			print(p,float(len(sucs))/len(runtime),"/",float(sum(time_real))/len(runtime))
+		return float(len(sucs))/len(runtime), float(sum(time_real))/len(runtime)
+	else:
+		if printresult:
+			print(p,float(0),"/",float(maxtime))
 		return 0,0
 
 #split 80% trainset into validSet, trainSet with specified binNum and which bin.
@@ -214,8 +232,19 @@ def machine_learning(args,ml_group):
     print("trainAll:",trainSetAll.shape)
     print("--trainSet:",trainSet.shape)
     print("--validSet:",validSet.shape)
-    print("testSet:",testSet.shape)
-    print("leaveSet:",leaveSet.shape)
+
+    
+    #printing names change
+    ## testSet print as Validation set
+    ## leaveSet print as Test set
+    
+    #but code does not change
+
+    #print("testSet:",testSet.shape)
+    #print("leaveSet:",leaveSet.shape)
+    print("Validation set:",testSet.shape)
+    print("Test set:",leaveSet.shape)
+
 
     trainSet.to_csv(ml_outfolder+"/trainSet.csv")
     validSet.to_csv(ml_outfolder+"/validSet.csv")
@@ -450,7 +479,9 @@ def machine_learning(args,ml_group):
         #modelResults.to_csv(("resultAnalysis/validition_result_analysis_"+mName+".csv"))
         '''
     print("\n")
-    print("testSet")
+    #print("testSet")
+    #change name to Validation set, code name not change
+    print("Validation Set")  
     drawLine()
     print("Indivadual encoding and Oracle performance: ")
     for alg in runtimeIndex:
@@ -579,7 +610,7 @@ if __name__ == "__main__":
         f.write('method,solving,time\n')    
 
     with open('evaluation/result2.csv','w') as f:
-        f.write('evaluation\n')
+        f.write('test\n')
 
     feature_folder=args.feature_folder[0]
     feature_groups=os.listdir(feature_folder)
