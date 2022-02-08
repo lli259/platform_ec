@@ -650,6 +650,6 @@ if __name__ == "__main__":
 
     feature_folder=args.feature_folder[0]
     feature_groups=os.listdir(feature_folder)
-    for ml_group in feature_groups[::-1]:
-        machine_learning(args,ml_group,feature_groups[-1])
+    for ml_group in sorted(feature_groups)[::-1]:
+        machine_learning(args,ml_group,sorted(feature_groups)[-1])
     
