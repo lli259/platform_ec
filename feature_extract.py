@@ -6,7 +6,7 @@ import pandas as pd
 import subprocess
 from multiprocessing import Process
 from multiprocessing import Semaphore
-
+import pandas as pd
 
 def define_args(arg_parser):
 
@@ -111,7 +111,37 @@ if __name__ == "__main__":
 
     for p in all_processes:
         p.join()
+
+
+
+    #remove NA
+    total_enc = os.listdir(encodings_folder)
+    enc=total_enc[0]
+    enc=encodings_folder+'/'+enc
+    df=pd.read_csv(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv")
+    df=df.set_index("instance_id")
+    df.columns=[i+enc for i in df.columns]
+    df=df.dropna()
+
+    for enc in total_enc[1:]:
+        enc=encodings_folder+'/'+enc
+        df1=pd.read_csv(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv")
+        df1=df1.set_index("instance_id") 
+        df.columns=[i+enc for i in df.columns] 
+        df.join(df1)
+        df=df.dropna()    
+    
+    all_instance_with_features=df.index.values
+
+    #save for each features
+    for enc in total_enc:
+        enc=encodings_folder+'/'+enc
+        df=pd.read_csv(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv")
+        df=df[df["instance_id"].isin(all_instance_with_features)]
+        df.to_csv(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv",index=False)    
+
     print('Features collection Done!')
+
 
 
     
