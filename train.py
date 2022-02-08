@@ -79,7 +79,12 @@ if args.p== ALLRUN or Encoding_candidate_gen in args.p or args.performance_provi
     if os.path.exists('cutoff/cutoff.txt'):
         with open('cutoff/cutoff.txt','r') as f:
             cutoff=f.readline()
-            
+
+    encodings_all=os.listdir(args.encodings[0])
+    if len(encodings_all)<2:
+        print('No enough encoding! Provide more encodings!')
+        exit()
+     
     os.system('python selected_candidate.py '
     +' --encodings ' +args.encodings[0]
     +' --selected_encodings ' +args.selected_encodings[0]
