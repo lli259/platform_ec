@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
         df=pd.read_csv(df_file)
         df=df.set_index(df.columns[0])
-        test_df=pd.read_csv('ml_models/'+performance_folder_group+'/testSet.csv')
+        test_df=pd.read_csv('ml_models/'+performance_folder_group+'/trainSetAll.csv')
         test_df=test_df.set_index(test_df.columns[0])
         df=df.loc[test_df.index]
         s,t=get_seq_diff_time(df,col_name1,col_name_2,t_given1,t_given2,int(cutoff))

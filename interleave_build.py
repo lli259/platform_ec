@@ -183,7 +183,7 @@ def savetofile(fold,cont):
         s,st,interl,time,g=cont
         print('interleaving schedule',g,interl,time)
         print('training result: solving','%:',round(s,2),'time:',round(st,2))
-        f.write(str(time)+","+str(interl))
+        f.write(str(g)+","+str(time)+","+str(interl))
 
 
 
@@ -237,7 +237,7 @@ if __name__ == "__main__":
             #test on test set
             df=pd.read_csv(df_file)
             df=df.set_index(df.columns[0])
-            test_df=pd.read_csv('ml_models/'+performance_folder_group+'/testSet.csv')
+            test_df=pd.read_csv('ml_models/'+performance_folder_group+'/trainSetAll.csv')
             test_df=test_df.set_index(test_df.columns[0])
             df=df.loc[test_df.index]
 
@@ -288,7 +288,7 @@ if __name__ == "__main__":
                 #test on test set
                 df=pd.read_csv(df_file)
                 df=df.set_index(df.columns[0])
-                test_df=pd.read_csv('ml_models/'+performance_folder_group+'/testSet.csv')
+                test_df=pd.read_csv('ml_models/'+performance_folder_group+'/trainSetAll.csv')
                 test_df=test_df.set_index(test_df.columns[0])
                 df=df.loc[test_df.index]
 
@@ -341,7 +341,7 @@ if __name__ == "__main__":
                 #test on test set
                 df=pd.read_csv(df_file)
                 df=df.set_index(df.columns[0])
-                test_df=pd.read_csv('ml_models/'+performance_folder_group+'/testSet.csv')
+                test_df=pd.read_csv('ml_models/'+performance_folder_group+'/trainSetAll.csv')
                 test_df=test_df.set_index(test_df.columns[0])
                 df=df.loc[test_df.index]
 
