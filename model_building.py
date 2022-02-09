@@ -122,7 +122,6 @@ def splitTrainValid(datasetX,bin,binNum):
 		return np.append(datasetX[:bin_size*(bin)],datasetX[bin_size*(bin+1):],axis=0),np.array(datasetX[bin_size*(bin):bin_size*(bin+1)])
 
 
-
 def drawLine():
     print("------------------------------------------------")
 
@@ -135,39 +134,51 @@ def getfromindex(input_df,csvfile):
     #print(instance_value)
     return input_df.loc[instance_value]
 
+
+#ml for each ml_group
+#ml_last_group comes first, cause it has most encodings
 def machine_learning(args,ml_group,ml_last_group):
+
+    # get features and performances folders for each groups
     feature_folder=args.feature_folder[0]+'/'+ml_group
     performance_folder=args.performance_folder[0]+'/'+ml_group
     cutoff=args.cutoff[0]
 
+    #output for all groups
     ml_outfolder=args.ml_models_folder[0]+'/'+ml_group
     ml_hyperfolder=args.ml_hyper_folder[0]+'/'+ml_group
 
+    #output for last group
+    #used for retrive train, test data, keeps consistency over groups
     ml_last_outfolder=args.ml_models_folder[0]+'/'+ml_last_group
 
+    #make folders
     checkMakeFolder(ml_hyperfolder)
     checkMakeFolder(ml_outfolder)
 
     #set according to your cutoff time
     TIME_MAX=int(cutoff)
-    #use varing PENALTY policy or 1000s fixed
+    #use varing PENALTY policy PARX or fixed
     VARING_PENALTY=False
-
     #set PENALTY_TIME, we can set as 200, PAR10, or PARX
     PENALTY_TIME=int(cutoff)
-
-
+    #seed for shuffle
+    np.random.seed(123)
+    random.seed(123 )
 
     score_functions=[make_scorer(relative_score),make_scorer(max_relative_score),"neg_mean_squared_error"]
     # here choose "neg_mean_squared_error"
     score_f=score_functions[2]
 
+    ##data collection
 
+    #combine features
     featureFile=feature_folder+'/'+os.listdir(feature_folder)[0]
     featureValue=pd.read_csv(featureFile)
     featureValue=featureValue.set_index(featureValue.columns[0])
     allCombine=featureValue.copy()
 
+    #combine features and performance
     performanceFile=performance_folder+'/'+os.listdir(performance_folder)[0]
     performanceValue=pd.read_csv(performanceFile)
     performanceValue=performanceValue.set_index(performanceValue.columns[0])
@@ -175,16 +186,13 @@ def machine_learning(args,ml_group,ml_last_group):
     performanceValue.columns=["runtime_"+algo for algo in algorithmNames]
     allCombine=allCombine.join(performanceValue)
 
-
-
     #remove duplicated
     allCombine = allCombine[~allCombine.index.duplicated(keep='first')]
     allCombine.sort_index()
 
-
+    #print features
     featureList=allCombine.columns.values[:-len(algorithmNames)]
     print("[Feature used]:",featureList)
-
 
     #drop "na" rows
     allCombine=allCombine.dropna(axis=0, how='any')
@@ -195,7 +203,7 @@ def machine_learning(args,ml_group,ml_last_group):
             # delete from the pd1 rows that contain "?"
             allCombine=allCombine[allCombine[feature].astype("str")!="?"]
 
-
+    #oracle analysis
     algs=["runtime_"+algo for algo in algorithmNames]
     allRuntime=allCombine[algs]
 
@@ -208,91 +216,46 @@ def machine_learning(args,ml_group,ml_last_group):
     allCombine["Oracle_name"]=Oracle_name
     allCombine["Instance_index"]=allCombine.index.values
 
-
+    #data split
+    #last group split, other groups copy instance index
     if ml_group==ml_last_group:
-        np.random.seed(123)
-        random.seed(123)
         #shuffle
-        #print(np.random.permutation(len(allCombine)))
         allCombine=allCombine.iloc[np.random.permutation(len(allCombine))]
-
 
         # get leave out data 15% of the full data:
         leaveIndex=random.sample(range(allCombine.shape[0]), int(allCombine.shape[0]*0.15))
-
         mlIndex=list(range(allCombine.shape[0]))
         for i in leaveIndex:
             if i in mlIndex:
                 mlIndex.remove(i)
-
         leaveSet=allCombine.iloc[leaveIndex]
-        mlSet=allCombine.iloc[mlIndex]
-        # get testing data 20% of the full data:
-        testIndex=random.sample(range(mlSet.shape[0]), int(mlSet.shape[0]*0.2))
 
-        trainIndex=list(range(mlSet.shape[0]))
-        for i in testIndex:
-            if i in trainIndex:
-                trainIndex.remove(i)
+        #remaining 75% as traing set
+        trainSetAll=allCombine.iloc[mlIndex]
 
-        testSet=mlSet.iloc[testIndex]
-        trainSetAll=mlSet.iloc[trainIndex]
-        trainSetAll.to_csv(ml_outfolder+'/trainSetAll.csv')
-        trainSet,validSet=splitTrainValid(trainSetAll,0,5)
-
-        trainSet=pd.DataFrame(trainSet,columns=trainSetAll.columns)
-        validSet=pd.DataFrame(validSet,columns=trainSetAll.columns)
-
-    
-        print("ALL after preprocess:",len(mlSet))
-        print("trainAll:",trainSetAll.shape)
-        print("--trainSet:",trainSet.shape)
-        print("--validSet:",validSet.shape)
-
-        
-        #printing names change
-        ## testSet print as Validation set
-        ## leaveSet print as Test set
-        
-        #but code does not change
-
-        #print("testSet:",testSet.shape)
-        #print("leaveSet:",leaveSet.shape)
-        print("Validation set:",testSet.shape)
+        print("ALL after preprocess:",len(trainSetAll)+len(leaveSet))
+        print("Train set:",trainSetAll.shape)
         print("Test set:",leaveSet.shape)
 
-
-        trainSet.to_csv(ml_outfolder+"/trainSet.csv")
-        validSet.to_csv(ml_outfolder+"/validSet.csv")
-        testSet.to_csv(ml_outfolder+"/testSet.csv")
+        trainSetAll.to_csv(ml_outfolder+'/trainSetAll.csv')
         leaveSet.to_csv(ml_outfolder+"/leaveSet.csv")
 
-    else:# index are same as last group
+    else:# keep data same as last group
         trainSetAll=getfromindex(allCombine,ml_last_outfolder+"/trainSetAll.csv")
-        trainSet=getfromindex(allCombine,ml_last_outfolder+"/trainSet.csv")
-        validSet=getfromindex(allCombine,ml_last_outfolder+"/validSet.csv")
-        testSet=getfromindex(allCombine,ml_last_outfolder+"/testSet.csv")
         leaveSet=getfromindex(allCombine,ml_last_outfolder+"/leaveSet.csv")
 
-        print("ALL after preprocess:",len(trainSet)+len(validSet)+len(testSet)+len(leaveSet))
-        print("trainAll:",trainSetAll.shape)
-        print("--trainSet:",trainSet.shape)
-        print("--validSet:",validSet.shape)
-        print("Validation set:",testSet.shape)
+        print("ALL after preprocess:",len(trainSetAll)+len(leaveSet))
+        print("Train set:",trainSetAll.shape)
         print("Test set:",leaveSet.shape)       
 
         trainSetAll.to_csv(ml_outfolder+'/trainSetAll.csv')
-        trainSet.to_csv(ml_outfolder+"/trainSet.csv")
-        validSet.to_csv(ml_outfolder+"/validSet.csv")
-        testSet.to_csv(ml_outfolder+"/testSet.csv")
         leaveSet.to_csv(ml_outfolder+"/leaveSet.csv")
 
 
-    #train each model:
 
+    #train each model:
     #hyperparameters tuning
     #grid search
-    #train and predict, save
     bestDepth={}
     if os.path.isdir(ml_hyperfolder):
         pickleFiles=[pickFile for pickFile in os.listdir(ml_hyperfolder) if pickFile.endswith(".pickle")]
@@ -300,89 +263,231 @@ def machine_learning(args,ml_group,ml_last_group):
             with open(ml_hyperfolder+'/regression_bestDepth.pickle', 'rb') as handle:
                 bestDepth = pickle.load(handle)
 
-    trainResult=trainSet.copy()
-    validResult=validSet.copy()
-    testResult=testSet.copy()
-    leaveResult=leaveSet.copy()
+
 
     for alg in algorithmNames:
-        trainSet_X=trainSet.loc[:,featureList].values
-        trainSet_y=trainSet["runtime_"+alg].values
-        validSet_X=validSet.loc[:,featureList].values
-        validSet_y=validSet["runtime_"+alg].values
-        testSet_X=testSet.loc[:,featureList].values
-        testSet_y=testSet["runtime_"+alg].values
-        leaveSet_X=leaveSet.loc[:,featureList].values
-        leaveSet_y=leaveSet["runtime_"+alg].values
+        #hyperparameters tuning on whole dataset
+        trainSetAll_X=trainSetAll.loc[:,featureList].values
+        trainSetAll_y=trainSetAll["runtime_"+alg].values
+
+        #load hyperparameters
+        #if no hyperparameters tuned, hyperparameters tuning on whole dataset
 
         bestDepthDT=0
         bestDepthRF=0
         bestKNeib=0
 
-
+        #load hyperparameters
         pickleFiles=[pickFile for pickFile in os.listdir(ml_hyperfolder) if pickFile.endswith(".pickle")]
         if 'regression_bestDepth.pickle' in pickleFiles:
             with open(ml_hyperfolder+'/regression_bestDepth.pickle', 'rb') as handle:
                 bestDepth = pickle.load(handle)
                 bestDepthDT,bestDepthRF,bestKNeib=bestDepth.get(alg,(0,0,0))
+
+        #hyperparameters tuning if not exitst
         if bestKNeib==0 and bestDepthDT==0 and bestDepthRF==0:
 
-            #Load parameter from pickle
             max_depth = range(2, 30, 1)
             dt_scores = []
             for k in max_depth:
                 regr_k =tree.DecisionTreeRegressor(max_depth=k)
-                loss = -cross_val_score(regr_k, trainSet_X, trainSet_y, cv=10, scoring=score_f)
+                loss = -cross_val_score(regr_k, trainSetAll_X, trainSetAll_y, cv=10, scoring=score_f)
                 dt_scores.append(loss.mean())
-            #plt.plot(max_depth, dt_scores,label="DT")
-            #plt.xlabel('Value of depth: Algorithm'+alg)
-            #plt.ylabel('Cross-Validated MSE')
             bestscoreDT,bestDepthDT=sorted(list(zip(dt_scores,max_depth)))[0]
-
 
 
             max_depth = range(2, 30, 1)
             dt_scores = []
             for k in max_depth:
                 regr_k = RandomForestRegressor(max_depth=k)
-                loss = -cross_val_score(regr_k, trainSet_X, trainSet_y, cv=10, scoring=score_f)
+                loss = -cross_val_score(regr_k, trainSetAll_X, trainSetAll_y, cv=10, scoring=score_f)
                 dt_scores.append(loss.mean())
-            #plt.plot(max_depth, dt_scores,label="RF")
-            #plt.xlabel('Value of depth: Algorithm'+alg)
-            #plt.ylabel('Cross-Validated MSE')
             bestscoreRF,bestDepthRF=sorted(list(zip(dt_scores,max_depth)))[0]
 
             max_neigh = range(2, 30, 1)
             kNN_scores = []
             for k in max_neigh:
                 kNeigh =KNeighborsRegressor(n_neighbors=k)
-                loss = -cross_val_score(kNeigh,trainSet_X, trainSet_y, cv=10, scoring=score_f)
+                loss = -cross_val_score(kNeigh,trainSetAll_X, trainSetAll_y, cv=10, scoring=score_f)
                 kNN_scores.append(loss.mean())
-            #plt.plot(max_neigh, kNN_scores,label="kNN")
-            #plt.xlabel('Value of depth: regression_'+alg)
-            #plt.ylabel('Cross-Validated MSE')
-            #plt.legend()
-            bestscoreRF,bestKNeib=sorted(list(zip(kNN_scores,max_neigh)))[0]
+            bestscoreKNN,bestKNeib=sorted(list(zip(kNN_scores,max_neigh)))[0]
 
-            #plt.savefig("hyperParameters/regression_"+alg)
-            #plt.clf()
 
             bestDepth[alg]=(bestDepthDT,bestDepthRF,bestKNeib)
             with open(ml_hyperfolder+'/regression_bestDepth.pickle', 'wb') as handle:
                 pickle.dump(bestDepth, handle)
 
-        #predict on all trainign validation and test set and save result
+    #now we have three models which one to choose? use 5 folds cross validation
+    # 5 folds cross validation to choose best out of 3 models
+    crossvalidation_result={'DT':[],'RF':[],'kNN':[]}
+
+    for valid_bin_split in range(5):
+        # per folder
+        print(valid_bin_split,'th fold validation:')
+        #load trainSet, validSet
+        trainSet,validSet=splitTrainValid(trainSetAll,valid_bin_split,5)
+        trainSet=pd.DataFrame(trainSet,columns=trainSetAll.columns)
+        validSet=pd.DataFrame(validSet,columns=trainSetAll.columns)
+
+        trainResult=trainSet.copy()
+        validResult=validSet.copy()
+
+        #prediction results on trainSet and validSet
+        for alg in algorithmNames:
+            #get training result and validation result for each alg
+            trainSet_X=trainSet.loc[:,featureList].values
+            trainSet_y=trainSet["runtime_"+alg].values
+            validSet_X=validSet.loc[:,featureList].values
+            validSet_y=validSet["runtime_"+alg].values   
+
+            #predict on all train and valid set and save result
+            dtModel=tree.DecisionTreeRegressor(max_depth=bestDepthDT)
+            dtModel= dtModel.fit(trainSet_X, trainSet_y)
+            y_=dtModel.predict(trainSet_X)
+            trainResult["DT_"+alg+"_pred"]=y_
+            y_=dtModel.predict(validSet_X)
+            validResult["DT_"+alg+"_pred"]=y_
+
+            ##########
+            rfModel=RandomForestRegressor(max_depth=bestDepthRF)
+            rfModel= rfModel.fit(trainSet_X, trainSet_y)
+            y_=rfModel.predict(trainSet_X)
+            trainResult["RF_"+alg+"_pred"]=y_
+            y_=rfModel.predict(validSet_X)
+            validResult["RF_"+alg+"_pred"]=y_
+
+            #########
+            kNeigh =KNeighborsRegressor(n_neighbors=bestKNeib)
+            kNeigh= kNeigh.fit(trainSet_X, trainSet_y)
+            y_=kNeigh.predict(trainSet_X)
+            trainResult["kNN_"+alg+"_pred"]=y_
+            y_=kNeigh.predict(validSet_X)
+            validResult["kNN_"+alg+"_pred"]=y_
+
+        #analysis
+        ##solved percent and runtime of each validation 
+        ##per algorithm, oracle and ES
+
+        ##training  result
+        runtimeIndex=[i for i in trainResult.columns if "runtime" in i]
+        drawLine()
+        print("trainSet")
+        print("Indivadual encoding and Oracle performance: ")
+        #print per algorithm
+        for alg in runtimeIndex:
+            printSvdPercAvgTime(alg.split("_")[1],trainResult[alg],TIME_MAX)
+        #print oracle
+        printSvdPercAvgTime("oracle_portfolio",trainResult.Oracle_value.values,TIME_MAX)
+        print("\nEncoding selection performance:")
+        for mName in "DT,RF,kNN".split(","):
+
+            print(mName)
+            encRuntime=[i for i in trainResult.columns if "runtime" in i]
+            modelRuntime=[i for i in trainResult.columns if mName in i]
+            modelResults=trainResult[encRuntime+modelRuntime].copy()
+
+            #save each instance's predicted runtime of six encoding and the corresponding predicted encoding name
+            #(runtime, name)
+            #for each instance, sort by runtime, so that we know which is the first predicted one
+            modelResultsCopy=modelResults[modelRuntime].copy()
+            for i in modelResultsCopy.columns.values:
+                modelResultsCopy[i]=[(j,i)for j in modelResultsCopy[i]]
+            predictedList=modelResultsCopy.values
+            predictedList.sort()
+
+            #the best predicted is the i[0]:(min_runtime, its_name)
+            bestpredname=[i[0][1] for i in predictedList]
+            bestname=["runtime_"+i.split("_")[1] for i in bestpredname]
+            bestruntime=[modelResults[bestname[i]].values[i]  for i in range(len(modelResults))]
+            modelResults["1st_ham"]=bestname
+            modelResults["1st_time"]=bestruntime
+            printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
+            
+
+        #validation results
+        
+        print("\n")
+        print("Validation Set")  
+        drawLine()
+        print("Indivadual encoding and Oracle performance: ")
+        for alg in runtimeIndex:
+            printSvdPercAvgTime(alg+"",validResult[alg],TIME_MAX)
+        printSvdPercAvgTime("oracle_portfolio",validResult.Oracle_value.values,TIME_MAX)
+        print("\nEncoding selection performance: ")
+        for mName in "DT,RF,kNN".split(","):
+            print(mName)
+            encRuntime=[i for i in validResult.columns if "runtime" in i]
+            modelRuntime=[i for i in validResult.columns if mName in i]
+            modelResults=validResult[encRuntime+modelRuntime].copy()
+
+            modelResultsCopy=modelResults[modelRuntime].copy()
+            for i in modelResultsCopy.columns.values:
+                modelResultsCopy[i]=[(j,i)for j in modelResultsCopy[i]]
+            predictedList=modelResultsCopy.values
+            predictedList.sort()
+
+            bestpredname=[i[0][1] for i in predictedList]
+            bestname=["runtime_"+i.split("_")[1] for i in bestpredname]
+            bestruntime=[modelResults[bestname[i]].values[i]  for i in range(len(modelResults))]
+            modelResults["1st_ham"]=bestname
+            modelResults["1st_time"]=bestruntime
+            sv_percent,sv_time=printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
+
+            #record each k folder crossvalidation results
+            crossvalidation_result[mName].append((sv_percent,sv_time))
+                
+    print(crossvalidation_result)
+    #get best models out of three modles with  5 folder crossvalidation result
+    #get avg of each model of 5 folder
+    validResultSaving=[]
+    for model_name in crossvalidation_result:
+        solving_per_all_k=0
+        solving_time_all_k=0
+        for k_fold_result in crossvalidation_result[model_name]:
+            solving_per_all_k+=k_fold_result[0]
+            solving_time_all_k+=k_fold_result[1]
+        validResultSaving.append((solving_per_all_k/5,solving_time_all_k/5,model_name))
+    #sort by avg solving per
+    #get best out of 3 models
+    validResultSaving=sorted(validResultSaving)[-1]
+    print(validResultSaving)
+    method=str(validResultSaving[2])
+    result_sol=str(validResultSaving[0])
+    result_tm=str(validResultSaving[1])
+
+    #write to evaluation result of each group
+    with open('evaluation/result.csv','a') as f:
+        f.write(method+'_'+ml_group+','+result_sol+','+result_tm+'\n')
+
+    print('\n')
+
+    #now we have best models for each group 
+    #we test all models on leave out set
+    #leave out set; test set
+    #load best model on whole trainSet and test on leave out set;
+    #other models also print, work as comparison
+
+    trainSet=trainSetAll.copy()
+    trainResult=trainSet.copy()
+
+    validSet=leaveSet.copy()
+    validResult=validSet.copy()
+
+    #prediction results on trainSet and validSet
+    for alg in algorithmNames:
+        #get training result and validation result for each alg
+        trainSet_X=trainSet.loc[:,featureList].values
+        trainSet_y=trainSet["runtime_"+alg].values
+        validSet_X=validSet.loc[:,featureList].values
+        validSet_y=validSet["runtime_"+alg].values   
+
+        #predict on all train and valid set and save result
         dtModel=tree.DecisionTreeRegressor(max_depth=bestDepthDT)
         dtModel= dtModel.fit(trainSet_X, trainSet_y)
         y_=dtModel.predict(trainSet_X)
         trainResult["DT_"+alg+"_pred"]=y_
         y_=dtModel.predict(validSet_X)
         validResult["DT_"+alg+"_pred"]=y_
-        y_=dtModel.predict(testSet_X)
-        testResult["DT_"+alg+"_pred"]=y_
-        y_=dtModel.predict(leaveSet_X)
-        leaveResult["DT_"+alg+"_pred"]=y_
-        
 
         ##########
         rfModel=RandomForestRegressor(max_depth=bestDepthRF)
@@ -391,10 +496,7 @@ def machine_learning(args,ml_group,ml_last_group):
         trainResult["RF_"+alg+"_pred"]=y_
         y_=rfModel.predict(validSet_X)
         validResult["RF_"+alg+"_pred"]=y_
-        y_=rfModel.predict(testSet_X)
-        testResult["RF_"+alg+"_pred"]=y_
-        y_=rfModel.predict(leaveSet_X)
-        leaveResult["RF_"+alg+"_pred"]=y_
+
         #########
         kNeigh =KNeighborsRegressor(n_neighbors=bestKNeib)
         kNeigh= kNeigh.fit(trainSet_X, trainSet_y)
@@ -402,20 +504,15 @@ def machine_learning(args,ml_group,ml_last_group):
         trainResult["kNN_"+alg+"_pred"]=y_
         y_=kNeigh.predict(validSet_X)
         validResult["kNN_"+alg+"_pred"]=y_
-        y_=kNeigh.predict(testSet_X)
-        testResult["kNN_"+alg+"_pred"]=y_
-        y_=kNeigh.predict(leaveSet_X)
-        leaveResult["kNN_"+alg+"_pred"]=y_
+
     #analysis
-    ##solved percent and runtime of
+    ##solved percent and runtime of each validation 
     ##per algorithm, oracle and ES
-    ##
+
+    ##training  result
     runtimeIndex=[i for i in trainResult.columns if "runtime" in i]
-
- 
-
     drawLine()
-    print("trainSet")
+    print("trainSetAll")
     print("Indivadual encoding and Oracle performance: ")
     #print per algorithm
     for alg in runtimeIndex:
@@ -423,15 +520,12 @@ def machine_learning(args,ml_group,ml_last_group):
     #print oracle
     printSvdPercAvgTime("oracle_portfolio",trainResult.Oracle_value.values,TIME_MAX)
     print("\nEncoding selection performance:")
-
-    testResultSaving=[]
     for mName in "DT,RF,kNN".split(","):
 
         print(mName)
         encRuntime=[i for i in trainResult.columns if "runtime" in i]
         modelRuntime=[i for i in trainResult.columns if mName in i]
         modelResults=trainResult[encRuntime+modelRuntime].copy()
-
 
         #save each instance's predicted runtime of six encoding and the corresponding predicted encoding name
         #(runtime, name)
@@ -451,35 +545,20 @@ def machine_learning(args,ml_group,ml_last_group):
         printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
         
 
-        #the second predicted is the i[1]:(min_runtime, its_name)
-        secondpredname=[i[1][1] for i in predictedList]
-        secondname=["runtime_"+i.split("_")[1] for i in secondpredname]
-        secondruntime=[modelResults[secondname[i]][i]  for i in range(len(modelResults))]
-        modelResults["2nd_ham"]=secondname
-        modelResults["2nd_time"]=secondruntime
-        #printSvdPercAvgTime("2nd",secondruntime)
-
-        '''
-        #the third predicted is the i[2]:(min_runtime, its_name)
-        thirdpredname=[i[2][1] for i in predictedList]
-        thirdname=["runtime_"+i.split("_")[1] for i in thirdpredname]
-        thirdruntime=[modelResults[thirdname[i]][i]  for i in range(len(modelResults))]
-        modelResults["3rd_ham"]=thirdname
-        modelResults["3rd_time"]=thirdruntime
-        #printSvdPercAvgTime("3rd",thirdruntime)
-        '''
-        #modelResults.to_csv(("resultAnalysis/training_result_analysis_"+mName+".csv"))
+    #validation results
+    
     print("\n")
-    '''    
+    #print("Test Set")  
     drawLine()
-    print("validSet")
     print("Indivadual encoding and Oracle performance: ")
     for alg in runtimeIndex:
-        printSvdPercAvgTime(alg+"",validResult[alg],TIME_MAX)
-    printSvdPercAvgTime("oracle_portfolio",validResult.Oracle_value.values,TIME_MAX)
-    print("\nEncoding selection performance:")
+        sv_percent,sv_time=printSvdPercAvgTime(alg+"",validResult[alg],TIME_MAX,False)
+        write2eva2(alg+ml_group,sv_percent,sv_time)
+    sv_percent,sv_time=printSvdPercAvgTime("oracle_portfolio",validResult.Oracle_value.values,TIME_MAX,False)
+    write2eva2("oracle_portfolio"+ml_group,sv_percent,sv_time)
+    #print("\nEncoding selection performance: ")
     for mName in "DT,RF,kNN".split(","):
-        print(mName)
+        #print(mName)
         encRuntime=[i for i in validResult.columns if "runtime" in i]
         modelRuntime=[i for i in validResult.columns if mName in i]
         modelResults=validResult[encRuntime+modelRuntime].copy()
@@ -495,131 +574,8 @@ def machine_learning(args,ml_group,ml_last_group):
         bestruntime=[modelResults[bestname[i]].values[i]  for i in range(len(modelResults))]
         modelResults["1st_ham"]=bestname
         modelResults["1st_time"]=bestruntime
-
-        printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
-
-        secondpredname=[i[1][1] for i in predictedList]
-        secondname=["runtime_"+i.split("_")[1] for i in secondpredname]
-        secondruntime=[modelResults[secondname[i]].values[i]  for i in range(len(modelResults))]
-        modelResults["2nd_ham"]=secondname
-        modelResults["2nd_time"]=secondruntime
-        #printSvdPercAvgTime("2nd",secondruntime)
-
-        thirdpredname=[i[2][1] for i in predictedList]
-        thirdname=["runtime_"+i.split("_")[1] for i in thirdpredname]
-        thirdruntime=[modelResults[thirdname[i]].values[i]  for i in range(len(modelResults))]
-        modelResults["3rd_ham"]=thirdname
-        modelResults["3rd_time"]=thirdruntime
-        #printSvdPercAvgTime("3rd",thirdruntime)
-
-        #modelResults.to_csv(("resultAnalysis/validition_result_analysis_"+mName+".csv"))
-        '''
-    print("\n")
-    #print("testSet")
-    #change name to Validation set, code name not change
-    print("Validation Set")  
-    drawLine()
-    print("Indivadual encoding and Oracle performance: ")
-    for alg in runtimeIndex:
-        printSvdPercAvgTime(alg+"",testResult[alg],TIME_MAX)
-    printSvdPercAvgTime("oracle_portfolio",testResult.Oracle_value.values,TIME_MAX)
-    print("\nEncoding selection performance: ")
-    for mName in "DT,RF,kNN".split(","):
-        print(mName)
-        encRuntime=[i for i in testResult.columns if "runtime" in i]
-        modelRuntime=[i for i in testResult.columns if mName in i]
-        modelResults=testResult[encRuntime+modelRuntime].copy()
-
-        modelResultsCopy=modelResults[modelRuntime].copy()
-        for i in modelResultsCopy.columns.values:
-            modelResultsCopy[i]=[(j,i)for j in modelResultsCopy[i]]
-        predictedList=modelResultsCopy.values
-        predictedList.sort()
-
-        bestpredname=[i[0][1] for i in predictedList]
-        bestname=["runtime_"+i.split("_")[1] for i in bestpredname]
-        bestruntime=[modelResults[bestname[i]].values[i]  for i in range(len(modelResults))]
-        modelResults["1st_ham"]=bestname
-        modelResults["1st_time"]=bestruntime
-        sv_percent,sv_time=printSvdPercAvgTime("1st",bestruntime,TIME_MAX)
-        testResultSaving.append((sv_percent,sv_time,mName))
-
-        secondpredname=[i[1][1] for i in predictedList]
-        secondname=["runtime_"+i.split("_")[1] for i in secondpredname]
-        secondruntime=[modelResults[secondname[i]].values[i]  for i in range(len(modelResults))]
-        modelResults["2nd_ham"]=secondname
-        modelResults["2nd_time"]=secondruntime
-        #printSvdPercAvgTime("2nd",secondruntime)
-        '''
-        thirdpredname=[i[2][1] for i in predictedList]
-        thirdname=["runtime_"+i.split("_")[1] for i in thirdpredname]
-        thirdruntime=[modelResults[thirdname[i]].values[i]  for i in range(len(modelResults))]
-        modelResults["3rd_ham"]=thirdname
-        modelResults["3rd_time"]=thirdruntime
-        #printSvdPercAvgTime("3rd",thirdruntime)
-        '''
-        #modelResults.to_csv(("resultAnalysis/testing_result_analysis_"+mName+".csv"))
-
-    testResultSaving=sorted(testResultSaving)[-1]
-    method=str(testResultSaving[2])
-    result_sol=str(testResultSaving[0])
-    result_tm=str(testResultSaving[1])
-    #print(testResultSaving[-1])
-    
-
-    with open('evaluation/result.csv','a') as f:
-        f.write(method+'_'+ml_group+','+result_sol+','+result_tm+'\n')
-
-    print('\n')
-  
-    #print("leaveSet")
-    #drawLine()
-    #print("Indivadual encoding and Oracle performance: ")
-    for alg in runtimeIndex:
-        sv_percent,sv_time=printSvdPercAvgTime(alg+"",leaveResult[alg],TIME_MAX,False)
-        write2eva2(alg+ml_group,sv_percent,sv_time)
-    sv_percent,sv_time=printSvdPercAvgTime("oracle_portfolio",leaveResult.Oracle_value.values,TIME_MAX,False)
-    write2eva2("oracle_portfolio"+ml_group,sv_percent,sv_time)
-    #print("\nEncoding selection performance: ")
-    for mName in "DT,RF,kNN".split(","):
-        #print(mName)
-        encRuntime=[i for i in leaveResult.columns if "runtime" in i]
-        modelRuntime=[i for i in leaveResult.columns if mName in i]
-        modelResults=leaveResult[encRuntime+modelRuntime].copy()
-
-        modelResultsCopy=modelResults[modelRuntime].copy()
-        for i in modelResultsCopy.columns.values:
-            modelResultsCopy[i]=[(j,i)for j in modelResultsCopy[i]]
-        predictedList=modelResultsCopy.values
-        predictedList.sort()
-
-        bestpredname=[i[0][1] for i in predictedList]
-        bestname=["runtime_"+i.split("_")[1] for i in bestpredname]
-        bestruntime=[modelResults[bestname[i]].values[i]  for i in range(len(modelResults))]
-        modelResults["1st_ham"]=bestname
-        modelResults["1st_time"]=bestruntime
         sv_percent,sv_time=printSvdPercAvgTime("1st",bestruntime,TIME_MAX,False)
         write2eva2(mName+ml_group,sv_percent,sv_time)
-
-        secondpredname=[i[1][1] for i in predictedList]
-        secondname=["runtime_"+i.split("_")[1] for i in secondpredname]
-        secondruntime=[modelResults[secondname[i]].values[i]  for i in range(len(modelResults))]
-        modelResults["2nd_ham"]=secondname
-        modelResults["2nd_time"]=secondruntime
-        #printSvdPercAvgTime("2nd",secondruntime)
-        '''
-        thirdpredname=[i[2][1] for i in predictedList]
-        thirdname=["runtime_"+i.split("_")[1] for i in thirdpredname]
-        thirdruntime=[modelResults[thirdname[i]].values[i]  for i in range(len(modelResults))]
-        modelResults["3rd_ham"]=thirdname
-        modelResults["3rd_time"]=thirdruntime
-        #printSvdPercAvgTime("3rd",thirdruntime)
-        '''
-        #modelResults.to_csv(("resultAnalysis/leaveing_result_analysis_"+mName+".csv"))
-
-
-
-
 
 
 if __name__ == "__main__":
@@ -650,6 +606,6 @@ if __name__ == "__main__":
 
     feature_folder=args.feature_folder[0]
     feature_groups=os.listdir(feature_folder)
-    for ml_group in feature_groups[::-1]:
-        machine_learning(args,ml_group,feature_groups[-1])
+    for ml_group in sorted(feature_groups)[::-1]:
+        machine_learning(args,ml_group,sorted(feature_groups)[-1])
     
