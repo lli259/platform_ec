@@ -88,6 +88,10 @@ if args.p== ALLRUN or Performance_gen in args.p:
         print('Data collection failed!')
         exit()
 
+    cutoff_set=0
+    with open('cutoff/cutoff.txt','r') as f:
+        line=f.readline()
+        cutoff_set=line
     #if passed, check if enough hard instance >500 for training
     allCombine_test=pd.read_csv(args.performance_data[0]+'/performance.csv')
     allCombine_testhard=allCombine_test.set_index('inst')
@@ -99,15 +103,15 @@ if args.p== ALLRUN or Performance_gen in args.p:
     all_to=set(allCombine_testhard.index.values)
     for col in allCombine_testhard.columns.values:
         #union all hard: one hard is ok.
-        no_easy_df=allCombine_testhard[allCombine_testhard[col]>float(args.cutoff[0])/7]
-        hard_df=no_easy_df[no_easy_df[col]<float(args.cutoff[0])-1]
+        no_easy_df=allCombine_testhard[allCombine_testhard[col]>float(cutoff_set)/7]
+        hard_df=no_easy_df[no_easy_df[col]<float(cutoff_set)-1]
         all_hard.update(set(hard_df.index.values))
 
         #intersection on easy and to: all to or all easy
-        easy_df=allCombine_testhard[allCombine_testhard[col]<float(args.cutoff[0])/7] 
+        easy_df=allCombine_testhard[allCombine_testhard[col]<float(cutoff_set)/7] 
         all_easy=all_easy.intersection(set(easy_df.index.values))  
 
-        to_df=allCombine_testhard[allCombine_testhard[col]>float(args.cutoff[0])-1] 
+        to_df=allCombine_testhard[allCombine_testhard[col]>float(cutoff_set)-1] 
         all_to=all_to.intersection(set(to_df.index.values))
 
     #print(all_hard)
