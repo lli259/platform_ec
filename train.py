@@ -94,17 +94,31 @@ if args.p== ALLRUN or Performance_gen in args.p:
     #allCombine_testhard=allCombine_testhard.iloc[100:105,:3]
     #print(len(allCombine_testhard))
 
-    all_not_easy=set()
+    all_hard=set()
+    all_easy=set(allCombine_testhard.index.values)
+    all_to=set(allCombine_testhard.index.values)
     for col in allCombine_testhard.columns.values:
-        no_easy_df=allCombine_testhard[allCombine_testhard[col]>30]
-        #hard_df=hard_df[hard_df[col]<160]
-        for i in no_easy_df.index:
-            all_not_easy.add(i)
+        #union all hard: one hard is ok.
+        no_easy_df=allCombine_testhard[allCombine_testhard[col]>float(args.cutoff[0])/7]
+        hard_df=no_easy_df[no_easy_df[col]<float(args.cutoff[0])-1]
+        all_hard.update(set(hard_df.index.values))
 
-    #print(all_not_easy)
-    #print(len(all_not_easy))
-    if len(all_not_easy)<500:
-        print('Less than 500 hard instances! Add more instances!')   
+        #intersection on easy and to: all to or all easy
+        easy_df=allCombine_testhard[allCombine_testhard[col]<float(args.cutoff[0])/7] 
+        all_easy=all_easy.intersection(set(easy_df.index.values))  
+
+        to_df=allCombine_testhard[allCombine_testhard[col]>float(args.cutoff[0])-1] 
+        all_to=all_to.intersection(set(to_df.index.values))
+
+    #print(all_hard)
+    #print(len(all_hard))
+    if len(all_hard)<500:
+        print('Less than 500 hard instances:',len(all_hard),'! Add more instances!')   
+        print('Found easy instances:',len(all_easy))
+        print('Found Timeout instances:',len(all_to))
+        with open ('cutoff/cutoff.txt','r',) as f:
+            cutset=f.readline()
+            print('Cutoff set as',cutset)
         exit()
 
 
