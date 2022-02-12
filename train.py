@@ -88,6 +88,10 @@ if args.p== ALLRUN or Performance_gen in args.p:
         print('Data collection failed!')
         exit()
 
+    cutoff_set=0
+    with open('cutoff/cutoff.txt','r') as f:
+        line=f.readline()
+        cutoff_set=float(line)
     #if passed, check if enough hard instance >500 for training
     allCombine_test=pd.read_csv(args.performance_data[0]+'/performance.csv')
     allCombine_testhard=allCombine_test.set_index('inst')
