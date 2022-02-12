@@ -159,9 +159,8 @@ def machine_learning(args,ml_group,ml_last_group):
     #set according to your cutoff time
     TIME_MAX=int(cutoff)
     #use varing PENALTY policy PARX or fixed
-    #False here, because it moved to candidate generation code
-    PARX=True
-    #set PENALTY_TIME
+    VARING_PENALTY=False
+    #set PENALTY_TIME, we can set as 200, PAR10, or PARX
     PENALTY_TIME=int(cutoff)
     #seed for shuffle
     np.random.seed(123)
@@ -217,36 +216,14 @@ def machine_learning(args,ml_group,ml_last_group):
     allCombine["Oracle_name"]=Oracle_name
     allCombine["Instance_index"]=allCombine.index.values
 
-    
-    #varing penalty parx
-    #moved to candidate selection code
-
-    if PARX:      
-        #Get how many enc timeouts each instance
-        rt_tos=[]
-        for idx in allRuntime.index:
-            rts=allRuntime.loc[idx]
-            #print('rts',rts)
-            rt_tos.append(sum([int(ti)>TIME_MAX-1 for ti in rts]))
-        #print('rt_tos',rt_tos)
-        #Update runtime for enc timeouts for instances
-        enc_values=algs
-        for i_index,i in enumerate(allCombine.index):
-            for j in enc_values:
-                if int(allCombine.loc[i,j]) > TIME_MAX-1:
-                    allCombine.loc[i,j]= rt_tos[i_index]*PENALTY_TIME
-            
-        #print(allCombine)
-
-
     #data split
     #last group split, other groups copy instance index
     if ml_group==ml_last_group:
         #shuffle
         allCombine=allCombine.iloc[np.random.permutation(len(allCombine))]
 
-        # get leave out data 20% of the full data:
-        leaveIndex=random.sample(range(allCombine.shape[0]), int(allCombine.shape[0]*0.2))
+        # get leave out data 15% of the full data:
+        leaveIndex=random.sample(range(allCombine.shape[0]), int(allCombine.shape[0]*0.15))
         mlIndex=list(range(allCombine.shape[0]))
         for i in leaveIndex:
             if i in mlIndex:
@@ -346,7 +323,7 @@ def machine_learning(args,ml_group,ml_last_group):
 
     for valid_bin_split in range(5):
         # per folder
-        print(valid_bin_split,'th fold validation:')
+        
         #load trainSet, validSet
         trainSet,validSet=splitTrainValid(trainSetAll,valid_bin_split,5)
         trainSet=pd.DataFrame(trainSet,columns=trainSetAll.columns)
@@ -459,7 +436,7 @@ def machine_learning(args,ml_group,ml_last_group):
             #record each k folder crossvalidation results
             crossvalidation_result[mName].append((sv_percent,sv_time))
                 
-    print(crossvalidation_result)
+
     #get best models out of three modles with  5 folder crossvalidation result
     #get avg of each model of 5 folder
     validResultSaving=[]
@@ -473,7 +450,6 @@ def machine_learning(args,ml_group,ml_last_group):
     #sort by avg solving per
     #get best out of 3 models
     validResultSaving=sorted(validResultSaving)[-1]
-    print(validResultSaving)
     method=str(validResultSaving[2])
     result_sol=str(validResultSaving[0])
     result_tm=str(validResultSaving[1])
@@ -535,7 +511,7 @@ def machine_learning(args,ml_group,ml_last_group):
     ##training  result
     runtimeIndex=[i for i in trainResult.columns if "runtime" in i]
     drawLine()
-    print("trainSetAll")
+    print("trainSet")
     print("Indivadual encoding and Oracle performance: ")
     #print per algorithm
     for alg in runtimeIndex:
@@ -571,7 +547,7 @@ def machine_learning(args,ml_group,ml_last_group):
     #validation results
     
     print("\n")
-    #print("Test Set")  
+    print("Test Set")  
     drawLine()
     print("Indivadual encoding and Oracle performance: ")
     for alg in runtimeIndex:

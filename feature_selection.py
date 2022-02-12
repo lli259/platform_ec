@@ -21,7 +21,16 @@ def get_most_meaningful(feature_data,performance_data,number_features):
 
     cols=alldata.columns.values
     #print(alldata.shape)
+    beforedrop=alldata.copy()
     alldata=alldata.dropna()
+    afterdrop=alldata.copy()
+    if beforedrop.shape != afterdrop.shape:
+        na_item=beforedrop[beforedrop.isnull().values]
+        print('na_item',na_item)
+        print('beforedrop',beforedrop)
+        print('performance_data',performance_data)
+        print('feature_data',feature_data)
+        exit()
     #print(alldata.shape)
     X_Train=alldata.loc[:,cols[:-1]]
     Y_Train=alldata.loc[:,cols[-1:]]
@@ -40,7 +49,16 @@ def get_most_meaningful(feature_data,performance_data,number_features):
 
 def get_accuracy(most_meaning_f,feature_data,performance_data):
     alldata=feature_data.join(performance_data)
+    beforedrop=alldata.copy()
     alldata=alldata.dropna()
+    afterdrop=alldata.copy()
+    if beforedrop.shape != afterdrop.shape:
+        na_item=beforedrop[beforedrop.isnull().values]
+        print('na_item',na_item)
+        print('beforedrop',beforedrop)
+        print('performance_data',performance_data)
+        print('feature_data',feature_data)
+        exit()
     cols=alldata.columns.values
     X_Train=alldata.loc[:,most_meaning_f]
     Y_Train=alldata.loc[:,cols[-1:]]
@@ -86,7 +104,9 @@ def save_to_folder_with_domain(args,selected_features,selected_file,most_meaning
     feature_domain_selected=feature_domain[most_meaning_f_dm]
 
     feature_data_selected=feature_data_selected.join(feature_domain_selected)
+    print('feature_data_selected before na',feature_data_selected.shape)
     feature_data_selected=feature_data_selected.dropna()
+    print('feature_data_selected after na',feature_data_selected.shape)
     feature_data_selected.to_csv(feature_outfolder+'/'+'features_select.csv')
 
 def select_f(args,performance_folder_group):
@@ -121,7 +141,7 @@ def select_f(args,performance_folder_group):
                 feature_selected_num_min=int(len(feature_data.columns)*0.4)
                 feature_selected_num_max=int(len(feature_data.columns)*0.7)            
             for diff_f_num in range(feature_selected_num_min,feature_selected_num_max+1):
-                #print('Feature Evaluation: ',diff_f_num)
+                print('Feature Evaluation: group ',performance_folder_group,'feature size ',diff_f_num)
                 most_meaning_f=get_most_meaningful(feature_data,performance_data,diff_f_num)
                 score=get_accuracy(most_meaning_f,feature_data,performance_data)
                 all_diff_features.append((score,most_meaning_f,f_each_enc))
@@ -145,7 +165,9 @@ def select_f(args,performance_folder_group):
     else:
         feature_domain=pd.read_csv(feature_domain_folder+'/'+feature_domain_file[0])
         feature_domain=feature_domain.set_index(feature_domain.columns[0])
+        print('feature_domain before na',feature_domain.shape)
         feature_domain=feature_domain.dropna()
+        print('feature_domain after na',feature_domain.shape)
         #print('domain feature selection...',feature_domain.shape)
 
         all_diff_features=[]
