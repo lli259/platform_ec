@@ -132,15 +132,15 @@ def combine_result(data_folder1,data_folder2):
     pd1.to_csv(data_folder2+'/'+output_file)
 
 
-#choose len/10, at least 10 or len, at most 50, to test hardness and set cutoff time
+#choose len/10, at least 20 or len, at most 100, to test hardness and set cutoff time
 def select_prerun_instance(instances_names):
     np.random.seed(1)
     sample_size=int(len(instances_names)/10)
-    if sample_size>50:
-        sample_size=50
+    if sample_size>100:
+        sample_size=100
     else:
-        if sample_size<10:
-            sample_size=min(len(instances_names),10)
+        if sample_size<20:
+            sample_size=min(len(instances_names),20)
     selected_enc=np.random.choice(instances_names,sample_size,replace=False)
 
     return selected_enc
@@ -298,7 +298,7 @@ def test_hardness_instances(encodings_folder,instances_folder,selected_ins,pre_r
             break
         if hardness=='easy':
             break
-        if hardness=='timeout':
+        if hardness=='timeout' and pre_run<2:
             t_cutoff=t_cutoff*2
 
     return hardness,t_cutoff
@@ -358,7 +358,7 @@ if __name__ == "__main__":
     
     make_cutoff()
 
-    #choose len/10, at least 10 or len, at most 100, to test hardness and set cutoff time
+    #choose len/10, at least 20 or len, at most 100, to test hardness and set cutoff time
     selected_ins=select_prerun_instance(instances_names)
     pre_run_data_final=data_final+'_prerun'
     pre_run_result_folder=pre_run_data_final+'_each_enc'

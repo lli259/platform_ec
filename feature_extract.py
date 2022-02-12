@@ -127,8 +127,9 @@ if __name__ == "__main__":
         enc=encodings_folder+'/'+enc
         df1=pd.read_csv(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv")
         df1=df1.set_index("instance_id") 
-        df.columns=[i+enc for i in df.columns] 
-        df.join(df1)
+        df1.columns=[i+enc for i in df1.columns] 
+        df1=df1.dropna()
+        df=df.join(df1)
         df=df.dropna()    
     
     all_instance_with_features=df.index.values
