@@ -21,7 +21,17 @@ def get_most_meaningful(feature_data,performance_data,number_features):
 
     cols=alldata.columns.values
     #print(alldata.shape)
+    #beforedrop=alldata.copy()
     alldata=alldata.dropna()
+    #afterdrop=alldata.copy()
+    '''
+    if beforedrop.shape != afterdrop.shape:
+        na_item=beforedrop[beforedrop.isnull().values]
+        print('na_item',na_item)
+        print('beforedrop',beforedrop)
+        print('performance_data',performance_data)
+        print('feature_data',feature_data)
+    '''
     #print(alldata.shape)
     X_Train=alldata.loc[:,cols[:-1]]
     Y_Train=alldata.loc[:,cols[-1:]]
@@ -109,6 +119,7 @@ def select_f(args,performance_folder_group):
     for f_each_enc in feature_all_enc:
         enc_name=f_each_enc.split('_')[0]
         if enc_name in all_enc_names:
+            print('Feature Evaluation: Encoding',enc_name)
             feature_data=pd.read_csv(feature_folder+'/'+f_each_enc)
             feature_data=feature_data.set_index(feature_data.columns[0])
             feature_selected_num_min=feature_selected_num_max=0
@@ -121,7 +132,7 @@ def select_f(args,performance_folder_group):
                 feature_selected_num_min=int(len(feature_data.columns)*0.4)
                 feature_selected_num_max=int(len(feature_data.columns)*0.7)            
             for diff_f_num in range(feature_selected_num_min,feature_selected_num_max+1):
-                #print('Feature Evaluation: ',diff_f_num)
+                print('Feature Evaluation: Feature size',diff_f_num)
                 most_meaning_f=get_most_meaningful(feature_data,performance_data,diff_f_num)
                 score=get_accuracy(most_meaning_f,feature_data,performance_data)
                 all_diff_features.append((score,most_meaning_f,f_each_enc))
