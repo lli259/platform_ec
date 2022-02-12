@@ -61,7 +61,7 @@ if __name__ == "__main__":
     #use varing PENALTY policy PARX or fixed
     #move to candidate generation code
     TIME_MAX=int(t_cutoff)
-    PARX=True
+    PARX=False
     PENALTY_TIME=int(t_cutoff)
     #set PENALTY_TIME
 
