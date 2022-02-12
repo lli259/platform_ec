@@ -160,7 +160,7 @@ def machine_learning(args,ml_group,ml_last_group):
     TIME_MAX=int(cutoff)
     #use varing PENALTY policy PARX or fixed
     #False here, because it moved to candidate generation code
-    PARX=True
+    PARX=False
     #set PENALTY_TIME
     PENALTY_TIME=int(cutoff)
     #seed for shuffle
