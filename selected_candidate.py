@@ -58,6 +58,31 @@ if __name__ == "__main__":
     df=df.set_index(cols[0])
     cols=df.columns
 
+    #use varing PENALTY policy PARX or fixed
+    #move to candidate generation code
+    TIME_MAX=int(t_cutoff)
+    PARX=True
+    PENALTY_TIME=int(t_cutoff)
+    #set PENALTY_TIME
+
+    if PARX:      
+        #Get how many enc timeouts each instance
+        rt_tos=[]
+        for idx in df.index:
+            rts=df.loc[idx]
+            #print('rts',rts)
+            rt_tos.append(sum([int(ti)>TIME_MAX-1 for ti in rts]))
+        #print('rt_tos',rt_tos)
+        #Update runtime for enc timeouts for instances
+        enc_names=cols
+        for i_index,i in enumerate(df.index):
+            for j in enc_names:
+                if int(df.loc[i,j]) > TIME_MAX-1:
+                    df.loc[i,j]= rt_tos[i_index]*PENALTY_TIME
+            
+        #print(allCombine)    
+   
+
     # add wins_index,win_name, win_time column
     wins=[]
     sec_wins=[]
