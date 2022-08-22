@@ -182,6 +182,12 @@ def machine_learning(args,ml_group,ml_last_group):
     #combine features and performance
     performanceFile=performance_folder+'/'+os.listdir(performance_folder)[0]
     performanceValue=pd.read_csv(performanceFile)
+
+    #remove '.csv' from index
+    index_no_dot=performanceValue[performanceValue.columns[0]].values
+    index_no_dot=[in_value.split('.')[0] for in_value in index_no_dot]
+    performanceValue[performanceValue.columns[0]]=index_no_dot
+
     performanceValue=performanceValue.set_index(performanceValue.columns[0])
     algorithmNames=performanceValue.columns.values
     performanceValue.columns=["runtime_"+algo for algo in algorithmNames]

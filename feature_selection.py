@@ -18,7 +18,7 @@ def define_args(arg_parser):
 
 def get_most_meaningful(feature_data,performance_data,number_features):
     alldata=feature_data.join(performance_data)
-
+    #print(alldata)
     cols=alldata.columns.values
     #print(alldata.shape)
     #beforedrop=alldata.copy()
@@ -41,7 +41,7 @@ def get_most_meaningful(feature_data,performance_data,number_features):
     #print(X_Train,Y_Train)
     #print(X_Train.shape,Y_Train.shape)
     Y_Train=Y_Train.values.reshape(X_Train.shape[0],)
-    
+    #print(Y_Train)
     trainedforest = RandomForestRegressor(n_estimators=200,max_depth=20).fit(X_Train,Y_Train)
 
     feat_importances = pd.Series(trainedforest.feature_importances_, index= X_Train.columns)
@@ -155,6 +155,13 @@ def select_f(args,performance_folder_group):
         save_to_folder(args,selected_features,selected_file,performance_folder_group)
     else:
         feature_domain=pd.read_csv(feature_domain_folder+'/'+feature_domain_file[0])
+
+
+        #remove '.csv' from index
+        index_no_dot=feature_domain[feature_domain.columns[0]].values
+        index_no_dot=[in_value.split('.')[0] for in_value in index_no_dot]
+        feature_domain[feature_domain.columns[0]]=index_no_dot
+
         feature_domain=feature_domain.set_index(feature_domain.columns[0])
         feature_domain=feature_domain.dropna()
         #print('domain feature selection...',feature_domain.shape)

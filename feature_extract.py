@@ -79,7 +79,7 @@ def run_multiprocess(enc,encodings_folder,instances_folder,features_folder,proce
                         f_values.append(feat_value_tem)
 
                 with open(features_folder+"/"+encoding_name_parser(enc)+"_feature.csv","a") as f:
-                    f.write(ins.split("/")[1]+","+",".join(f_values)+"\n")
+                    f.write(ins.split("/")[1].split('.')[0]+","+",".join(f_values)+"\n")
 
     sema.release()
 if __name__ == "__main__":
