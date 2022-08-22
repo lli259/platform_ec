@@ -158,14 +158,16 @@ def machine_learning(args,ml_group,ml_last_group):
 
     #set according to your cutoff time
     TIME_MAX=int(cutoff)
+    #print('test time max',TIME_MAX)
+
     #use varing PENALTY policy PARX or fixed
     #False here, because it moved to candidate generation code
     PARX=True
     #set PENALTY_TIME
     PENALTY_TIME=int(cutoff)
     #seed for shuffle
-    np.random.seed(123)
-    random.seed(123 )
+    np.random.seed(3)
+    random.seed(3 )
 
     score_functions=[make_scorer(relative_score),make_scorer(max_relative_score),"neg_mean_squared_error"]
     # here choose "neg_mean_squared_error"

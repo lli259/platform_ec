@@ -131,7 +131,7 @@ if args.p== ALLRUN or Encoding_candidate_gen in args.p or args.performance_provi
 
     cutoff=args.cutoff[0]
 
-    if os.path.exists('cutoff/cutoff.txt'):
+    if Performance_gen in args.p and os.path.exists('cutoff/cutoff.txt'):
         with open('cutoff/cutoff.txt','r') as f:
             cutoff=f.readline()
     #encoding candidates are not selected if only 1, or 0 encoding
@@ -179,7 +179,7 @@ if args.p== ALLRUN or Model_building in args.p or args.performance_provided or a
 
     cutoff=args.cutoff[0]
 
-    if os.path.exists('cutoff/cutoff.txt'):
+    if Performance_gen in args.p and os.path.exists('cutoff/cutoff.txt'):
         with open('cutoff/cutoff.txt','r') as f:
             cutoff=f.readline()
 
@@ -197,7 +197,7 @@ if args.p== ALLRUN or Schedule_building in args.p or args.performance_provided o
 
     cutoff=args.cutoff[0]
 
-    if os.path.exists('cutoff/cutoff.txt'):
+    if Performance_gen in args.p and os.path.exists('cutoff/cutoff.txt'):
         with open('cutoff/cutoff.txt','r') as f:
             cutoff=f.readline()
 
