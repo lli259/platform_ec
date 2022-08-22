@@ -164,8 +164,8 @@ def machine_learning(args,ml_group,ml_last_group):
     #set PENALTY_TIME
     PENALTY_TIME=int(cutoff)
     #seed for shuffle
-    np.random.seed(123)
-    random.seed(123 )
+    np.random.seed(33)
+    random.seed(33)
 
     score_functions=[make_scorer(relative_score),make_scorer(max_relative_score),"neg_mean_squared_error"]
     # here choose "neg_mean_squared_error"
